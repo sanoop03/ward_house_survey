@@ -1,0 +1,2383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ward House Survey — API Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:        #0b0d17;
+    --bg2:       #111425;
+    --bg3:       #181c30;
+    --glass:     rgba(255,255,255,0.04);
+    --border:    rgba(255,255,255,0.08);
+    --accent:    #6c63ff;
+    --accent2:   #a78bfa;
+    --green:     #10b981;
+    --orange:    #f59e0b;
+    --red:       #ef4444;
+    --blue:      #3b82f6;
+    --cyan:      #06b6d4;
+    --text:      #e2e8f0;
+    --text2:     #94a3b8;
+    --text3:     #64748b;
+    --radius:    12px;
+    --shadow:    0 8px 32px rgba(0,0,0,0.4);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;overflow-x:hidden}
+
+  /* ── SIDEBAR ── */
+  .sidebar{
+    width:260px;min-width:260px;background:var(--bg2);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;
+    padding:0 0 24px;z-index:100;
+  }
+  .sidebar::-webkit-scrollbar{width:4px}
+  .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+  .logo{
+    padding:28px 20px 20px;border-bottom:1px solid var(--border);
+    background:linear-gradient(135deg,rgba(108,99,255,0.15),rgba(167,139,250,0.05));
+  }
+  .logo h1{font-size:15px;font-weight:700;color:var(--text);line-height:1.3}
+  .logo span{font-size:11px;color:var(--accent2);font-weight:500;letter-spacing:.5px;text-transform:uppercase}
+
+  /* Token display */
+  .token-box{margin:14px 12px;padding:12px 14px;background:var(--glass);border:1px solid var(--border);border-radius:10px}
+  .token-box label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+  .token-display{
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent2);
+    word-break:break-all;margin-top:6px;line-height:1.5;
+    max-height:44px;overflow:hidden;text-overflow:ellipsis;
+  }
+  .token-actions{display:flex;gap:6px;margin-top:8px}
+  .token-actions button{
+    flex:1;font-size:10px;padding:5px 0;border:1px solid var(--border);
+    background:transparent;color:var(--text2);border-radius:6px;cursor:pointer;
+    font-family:'Inter',sans-serif;transition:.2s
+  }
+  .token-actions button:hover{background:var(--glass);color:var(--text)}
+
+  /* Nav */
+  .nav-section{padding:20px 12px 6px}
+  .nav-section-title{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:700;padding:0 8px;margin-bottom:6px}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;
+    cursor:pointer;font-size:13px;color:var(--text2);font-weight:500;
+    transition:.2s;margin-bottom:2px;border:1px solid transparent;
+  }
+  .nav-item:hover{background:var(--glass);color:var(--text);border-color:var(--border)}
+  .nav-item.active{background:rgba(108,99,255,0.15);color:var(--accent2);border-color:rgba(108,99,255,0.3)}
+  .nav-item .icon{font-size:15px;width:20px;text-align:center}
+  .nav-badge{
+    margin-left:auto;font-size:10px;background:rgba(108,99,255,0.2);
+    color:var(--accent2);padding:2px 7px;border-radius:20px;font-weight:600
+  }
+
+  /* ── MAIN ── */
+  .main{flex:1;overflow-y:auto;padding:32px}
+  .main::-webkit-scrollbar{width:6px}
+  .main::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
+
+  /* Section */
+  .section{display:none}
+  .section.active{display:block}
+
+  .section-header{margin-bottom:28px}
+  .section-header h2{font-size:24px;font-weight:700;color:var(--text)}
+  .section-header p{font-size:13px;color:var(--text2);margin-top:6px}
+
+  /* Cards grid */
+  .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(560px,1fr));gap:20px}
+
+  /* API Card */
+  .api-card{
+    background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+    overflow:hidden;transition:.3s;
+  }
+  .api-card:hover{border-color:rgba(108,99,255,0.3);box-shadow:0 0 0 1px rgba(108,99,255,0.1)}
+
+  .card-header{
+    display:flex;align-items:center;gap:12px;padding:16px 18px;
+    background:var(--glass);border-bottom:1px solid var(--border);
+    cursor:pointer;user-select:none;
+  }
+  .card-header:hover{background:rgba(255,255,255,0.05)}
+  .method-badge{
+    font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;
+    font-family:'JetBrains Mono',monospace;letter-spacing:.5px;flex-shrink:0
+  }
+  .method-GET   {background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3)}
+  .method-POST  {background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3)}
+  .method-PATCH {background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)}
+  .method-DELETE{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3)}
+
+  .endpoint-path{
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);font-weight:500;flex:1
+  }
+  .card-title-text{font-size:12px;color:var(--text2);margin-top:2px}
+  .card-chevron{color:var(--text3);font-size:12px;transition:.3s}
+  .card-header.open .card-chevron{transform:rotate(180deg)}
+
+  .card-body{display:none;padding:18px}
+  .card-body.open{display:block}
+
+  /* Form */
+  .form-group{margin-bottom:14px}
+  .form-group label{font-size:11px;color:var(--text2);font-weight:600;display:block;margin-bottom:6px;letter-spacing:.3px}
+  .form-group label span{color:var(--red);margin-left:2px}
+  .form-control{
+    width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);
+    border-radius:8px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;
+    transition:.2s;outline:none;
+  }
+  .form-control:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.1)}
+  .form-control::placeholder{color:var(--text3)}
+  select.form-control{cursor:pointer}
+  select.form-control option{background:var(--bg3)}
+  textarea.form-control{min-height:80px;resize:vertical;line-height:1.5}
+
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+  /* File input */
+  .file-input-wrapper{
+    position:relative;border:2px dashed var(--border);border-radius:8px;
+    padding:16px;text-align:center;cursor:pointer;transition:.2s;
+  }
+  .file-input-wrapper:hover{border-color:var(--accent);background:rgba(108,99,255,0.05)}
+  .file-input-wrapper input[type=file]{
+    position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%
+  }
+  .file-input-wrapper .file-hint{font-size:12px;color:var(--text3)}
+  .file-input-wrapper .file-hint strong{color:var(--accent2)}
+  .file-count{font-size:11px;color:var(--green);margin-top:6px;font-weight:600}
+
+  /* Buttons */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:8px;
+    font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.2s;
+    font-family:'Inter',sans-serif;
+  }
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+  .btn-primary:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 20px rgba(108,99,255,0.4)}
+  .btn-primary:active{transform:translateY(0)}
+  .btn-danger{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3)}
+  .btn-danger:hover{background:rgba(239,68,68,0.25)}
+  .btn-secondary{background:var(--glass);color:var(--text);border:1px solid var(--border)}
+  .btn-secondary:hover{background:rgba(255,255,255,0.08);border-color:rgba(108,99,255,0.4)}
+  .btn-success{background:linear-gradient(135deg,#059669,#10b981);color:#fff}
+  .btn-success:hover{opacity:.92;transform:translateY(-1px);box-shadow:0 4px 20px rgba(16,185,129,0.35)}
+  .btn-sm{padding:6px 14px;font-size:12px}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+  .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .angle-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-top:12px}
+  .angle-photo-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;position:relative}
+  .angle-photo-card img{width:100%;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--border)}
+  .member-row-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px;position:relative}
+  .member-row-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+  .role-alert{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border-radius:10px;margin-bottom:18px;font-size:12.5px}
+  .role-alert.warn{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.35);color:#fcd34d}
+  .role-alert.ready{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7}
+  .data-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:10px}
+  .data-table th,.data-table td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border)}
+  .data-table th{color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+
+  .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* Response */
+  .response-box{margin-top:16px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+  .response-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border);
+  }
+  .response-status{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600}
+  .status-dot{width:8px;height:8px;border-radius:50%}
+  .status-dot.ok{background:var(--green)}
+  .status-dot.err{background:var(--red)}
+  .response-time{font-size:11px;color:var(--text3)}
+  .response-body{
+    padding:14px;font-family:'JetBrains Mono',monospace;font-size:11.5px;
+    color:var(--text);white-space:pre-wrap;word-break:break-all;
+    max-height:300px;overflow-y:auto;background:var(--bg);line-height:1.7;
+  }
+  .response-body::-webkit-scrollbar{width:4px}
+  .response-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+  /* JSON syntax highlighting */
+  .json-key   {color:#93c5fd}
+  .json-string{color:#86efac}
+  .json-number{color:#fca5a5}
+  .json-bool  {color:#fdba74}
+  .json-null  {color:var(--text3)}
+
+  /* Toast */
+  .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px}
+  .toast{
+    padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;
+    backdrop-filter:blur(20px);animation:slideIn .3s ease;max-width:340px;
+    display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)
+  }
+  .toast.success{background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#34d399}
+  .toast.error  {background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171}
+  .toast.info   {background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#60a5fa}
+  @keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+
+  /* Stats bar */
+  .stats-bar{display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap}
+  .stat-card{
+    flex:1;min-width:140px;padding:16px 20px;background:var(--bg2);
+    border:1px solid var(--border);border-radius:var(--radius);
+    display:flex;flex-direction:column;gap:4px;
+  }
+  .stat-value{font-size:28px;font-weight:800;color:var(--text)}
+  .stat-label{font-size:12px;color:var(--text2)}
+  .stat-icon{font-size:22px;margin-bottom:4px}
+
+  /* Info note */
+  .info-note{
+    padding:12px 16px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);
+    border-radius:8px;font-size:12px;color:#93c5fd;margin-bottom:18px;line-height:1.6;
+  }
+  .info-note strong{color:#60a5fa}
+
+  /* Divider */
+  .divider{height:1px;background:var(--border);margin:20px 0}
+
+  /* Photo preview strip */
+  .photo-previews{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .photo-thumb{
+    width:64px;height:64px;object-fit:cover;border-radius:6px;
+    border:1px solid var(--border);
+  }
+
+  /* Responsive */
+  @media(max-width:900px){
+    .sidebar{width:220px;min-width:220px}
+    .cards-grid{grid-template-columns:1fr}
+    .form-row{grid-template-columns:1fr}
+  }
+  @media(max-width:640px){
+    .sidebar{display:none}
+    .main{padding:16px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<nav class="sidebar">
+  <div class="logo">
+    <h1>🏘️ Ward Survey</h1>
+    <span>API Testing Dashboard</span>
+  </div>
+
+  <!-- Token Box -->
+  <div class="token-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <label>Active Session</label>
+      <span id="sidebarRoleBadge" style="font-size:10px;padding:2px 7px;border-radius:12px;background:rgba(255,255,255,0.06);color:var(--text3);font-weight:600">Guest</span>
+    </div>
+    <div id="sidebarUser" style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">Not logged in</div>
+    <label>Auth Token</label>
+    <div class="token-display" id="sidebarToken">— not logged in —</div>
+    <div class="token-actions">
+      <button onclick="copyToken()">📋 Copy</button>
+      <button onclick="clearToken()">🗑 Clear</button>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="nav-section">
+    <div class="nav-section-title">Overview</div>
+    <div class="nav-item active" onclick="showSection('overview',this)">
+      <span class="icon">📊</span> Dashboard
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Field Agent Forms</div>
+    <div class="nav-item" id="nav-home-form" onclick="showSection('home-form',this)">
+      <span class="icon">🏡</span> Home Form <span class="nav-badge" style="background:rgba(16,185,129,0.2);color:#34d399">Form 1</span>
+    </div>
+    <div class="nav-item" id="nav-family-form" onclick="showSection('family-form',this);loadHousesForDropdown()">
+      <span class="icon">👨‍👩‍👧‍👦</span> Family Form <span class="nav-badge" style="background:rgba(16,185,129,0.2);color:#34d399">Form 2</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Authentication</div>
+    <div class="nav-item" onclick="showSection('admin-auth',this)">
+      <span class="icon">🔐</span> Admin Auth
+    </div>
+    <div class="nav-item" onclick="showSection('agent-auth',this)">
+      <span class="icon">🪪</span> Agent Auth
+    </div>
+    <div class="nav-item" onclick="showSection('profile',this)">
+      <span class="icon">👤</span> Profile
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Agent Management</div>
+    <div class="nav-item" onclick="showSection('agents',this)">
+      <span class="icon">👥</span> Agents <span class="nav-badge">Admin</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Survey</div>
+    <div class="nav-item" onclick="showSection('houses',this)">
+      <span class="icon">🏠</span> House Surveys
+    </div>
+    <div class="nav-item" onclick="showSection('photos',this)">
+      <span class="icon">📸</span> Photos
+    </div>
+    <div class="nav-item" onclick="showSection('family',this)">
+      <span class="icon">👨‍👩‍👧‍👦</span> Family Members
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Reports</div>
+    <div class="nav-item" onclick="showSection('report',this)">
+      <span class="icon">📋</span> Admin Report <span class="nav-badge">Admin</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<main class="main">
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ── OVERVIEW ── -->
+  <section class="section active" id="overview">
+    <div class="section-header">
+      <h2>🏘️ Ward House Survey — API Dashboard</h2>
+      <p>Test all REST API endpoints directly from your browser. All requests hit the actual API — same as your Android app.</p>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-icon">🔢</div>
+        <div class="stat-value">23</div>
+        <div class="stat-label">Total Endpoints</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔐</div>
+        <div class="stat-value">9</div>
+        <div class="stat-label">Auth Endpoints</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏠</div>
+        <div class="stat-value">10</div>
+        <div class="stat-label">Survey Endpoints</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📸</div>
+        <div class="stat-value">4</div>
+        <div class="stat-label">Media Endpoints</div>
+      </div>
+    </div>
+
+    <div class="info-note">
+      <strong>🚀 Quick Start:</strong> Go to <strong>Admin Auth → Admin Login</strong> to get your token, then it auto-fills for all subsequent requests. All photo uploads are stored inside the project at <strong>media/house_photos/&lt;house_id&gt;/</strong>
+    </div>
+
+    <div class="info-note" style="border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.07);color:#c4b5fd">
+      <strong>📱 Android Compatible:</strong> Every API call made from this dashboard uses the same endpoint URLs your Android app will use. If it works here, it works on Android.
+    </div>
+
+    <!-- Quick Shortcut Bar -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+      <button class="btn btn-success" onclick="jumpToSection('home-form')">🏡 Open Home Form (API Test)</button>
+      <button class="btn btn-success" onclick="jumpToSection('family-form');loadHousesForDropdown()">👨‍👩‍👧‍👦 Open Family Form (API Test)</button>
+      <button class="btn btn-secondary" onclick="jumpToSection('report')">📋 View Admin Full Report</button>
+    </div>
+
+    <div class="cards-grid">
+      <!-- Quick Admin Login -->
+      <div class="api-card">
+        <div class="card-header open" onclick="toggleCard(this)">
+          <span class="method-badge method-POST">POST</span>
+          <div>
+            <div class="endpoint-path">/api/auth/admin/login/</div>
+            <div class="card-title-text">⚡ Quick Admin Login — manage agents &amp; view all houses</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body open">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Username <span>*</span></label>
+              <input type="text" class="form-control" id="ql-username" value="admin" placeholder="admin"/>
+            </div>
+            <div class="form-group">
+              <label>Password <span>*</span></label>
+              <input type="password" class="form-control" id="ql-password" value="Admin@1234" placeholder="••••••••"/>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="quickLogin()">
+            🔑 Login as Admin
+          </button>
+          <div id="ql-response"></div>
+        </div>
+      </div>
+
+      <!-- Quick Field Agent Login -->
+      <div class="api-card">
+        <div class="card-header open" onclick="toggleCard(this)">
+          <span class="method-badge method-POST">POST</span>
+          <div>
+            <div class="endpoint-path">/api/auth/agent/login/</div>
+            <div class="card-title-text">🪪 Quick Field Agent Login — submit Home Form &amp; Family Form</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body open">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Username <span>*</span></label>
+              <input type="text" class="form-control" id="qal-username" value="agent01" placeholder="agent01"/>
+            </div>
+            <div class="form-group">
+              <label>Password <span>*</span></label>
+              <input type="password" class="form-control" id="qal-password" value="Agent@1234" placeholder="••••••••"/>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-success" onclick="quickAgentLogin()">
+              🪪 Login as Field Agent
+            </button>
+            <button class="btn btn-secondary" onclick="quickAgentLoginAndOpenHome()">
+              🏡 Login &amp; Go to Home Form →
+            </button>
+          </div>
+          <div id="qal-response"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FORM 1: HOME FORM (FIELD AGENT) ── -->
+  <section class="section" id="home-form">
+    <div class="section-header">
+      <h2>🏡 Form 1: Home Form — Live API Tester</h2>
+      <p>Tests <code>POST /api/survey/houses/</code> (multipart/form-data) — uploads multiple angle house photos to <code>media/house_photos/&lt;house_id&gt;/</code> and saves all 15 house fields.</p>
+    </div>
+
+    <div id="home-role-banner"></div>
+
+    <div class="api-card" style="margin-bottom:24px">
+      <div class="card-header open" style="cursor:default">
+        <span class="method-badge method-POST">POST</span>
+        <div>
+          <div class="endpoint-path">/api/survey/houses/</div>
+          <div class="card-title-text">Android Field Agent — Home Survey Submission Form</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillSampleHomeForm()">✨ Auto-Fill Sample Data</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="captureHomeGPS()">📍 Get GPS Location</button>
+        </div>
+      </div>
+      <div class="card-body open">
+        <!-- Row 1: House No, Ward No, Owner Name -->
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>House Number <span>*</span></label>
+            <input class="form-control" id="hf-house-number" placeholder="e.g. HN-104/B"/>
+          </div>
+          <div class="form-group">
+            <label>Ward No <span>*</span></label>
+            <input class="form-control" id="hf-ward-no" placeholder="e.g. Ward-07"/>
+          </div>
+          <div class="form-group">
+            <label>Owner Name <span>*</span></label>
+            <input class="form-control" id="hf-owner-name" placeholder="e.g. Ramesh Gowda"/>
+          </div>
+        </div>
+
+        <!-- Row 2: Address & Landmark -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Address <span>*</span></label>
+            <textarea class="form-control" id="hf-address" style="min-height:64px" placeholder="Full street / village address..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Landmark</label>
+            <textarea class="form-control" id="hf-landmark" style="min-height:64px" placeholder="e.g. Near Govt Primary School"></textarea>
+          </div>
+        </div>
+
+        <!-- Row 3: Ownership, House Type, Roof Type -->
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>Ownership <span>*</span></label>
+            <select class="form-control" id="hf-ownership">
+              <option value="own">Own (own)</option>
+              <option value="rent">Rent (rent)</option>
+              <option value="lease">Lease (lease)</option>
+              <option value="others">Others (others)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>House Type <span>*</span></label>
+            <select class="form-control" id="hf-house-type">
+              <option value="permanent">Permanent (permanent)</option>
+              <option value="semi_permanent">Semi-Permanent (semi_permanent)</option>
+              <option value="temporary">Temporary (temporary)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Roof Type <span>*</span></label>
+            <select class="form-control" id="hf-roof-type">
+              <option value="rcc">RCC (rcc)</option>
+              <option value="tiles">Tiles (tiles)</option>
+              <option value="asbestos">Asbestos (asbestos)</option>
+              <option value="thatched">Thatched (thatched)</option>
+              <option value="others">Others (others)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 4: Water Source, Electricity, Toilet, Ration Card -->
+        <div class="form-row">
+          <div class="form-row" style="margin:0">
+            <div class="form-group">
+              <label>Water Source <span>*</span></label>
+              <select class="form-control" id="hf-water-source">
+                <option value="tap">Tap Water (tap)</option>
+                <option value="well">Well (well)</option>
+                <option value="borewell">Borewell (borewell)</option>
+                <option value="river">River (river)</option>
+                <option value="others">Others (others)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Electricity <span>*</span></label>
+              <select class="form-control" id="hf-electricity">
+                <option value="yes">Yes (yes)</option>
+                <option value="no">No (no)</option>
+                <option value="solar">Solar (solar)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row" style="margin:0">
+            <div class="form-group">
+              <label>Toilet <span>*</span></label>
+              <select class="form-control" id="hf-toilet">
+                <option value="yes">Yes - Private (yes)</option>
+                <option value="no">No (no)</option>
+                <option value="shared">Shared (shared)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Ration Card Type <span>*</span></label>
+              <select class="form-control" id="hf-ration-card">
+                <option value="bpl">BPL (bpl)</option>
+                <option value="apl">APL (apl)</option>
+                <option value="aay">AAY - Antyodaya (aay)</option>
+                <option value="none">None (none)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 5: GPS Location & Remarks -->
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>GPS Latitude</label>
+            <input class="form-control" id="hf-latitude" type="number" step="any" placeholder="12.971598"/>
+          </div>
+          <div class="form-group">
+            <label>GPS Longitude</label>
+            <input class="form-control" id="hf-longitude" type="number" step="any" placeholder="77.594566"/>
+          </div>
+          <div class="form-group">
+            <label>Remarks</label>
+            <input class="form-control" id="hf-remarks" placeholder="Any field observations..."/>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Multi-Angle Photos Upload -->
+        <div class="form-group">
+          <label>📸 House Multiple Angle Photos (Front, Back, Left, Right, Roof, Interior)</label>
+          <div class="file-input-wrapper">
+            <input type="file" id="hf-photos-input" multiple accept="image/*" onchange="handleHomeFormPhotos(this)"/>
+            <div class="file-hint">Drop or <strong>click to select multiple angle photos</strong> (stored in <code>media/house_photos/&lt;house_id&gt;/</code>)</div>
+          </div>
+          <div id="hf-angle-cards" class="angle-photo-grid"></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px">
+          <button class="btn btn-primary" onclick="submitHomeFormInteractive()">📤 Submit Home Form via API</button>
+          <button class="btn btn-secondary" onclick="generateSampleCanvasPhotos()">🖼️ Generate 3 Test Angle Photos</button>
+          <div id="hf-next-step"></div>
+        </div>
+
+        <div id="hf-api-response"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FORM 2: FAMILY FORM (FIELD AGENT) ── -->
+  <section class="section" id="family-form">
+    <div class="section-header">
+      <h2>👨‍👩‍👧‍👦 Form 2: Family Form — Live API Tester</h2>
+      <p>Tests <code>POST /api/survey/houses/&lt;house_id&gt;/family/</code> (single member or bulk list) &amp; <code>GET /api/survey/houses/&lt;house_id&gt;/family/</code>.</p>
+    </div>
+
+    <div id="family-role-banner"></div>
+
+    <div class="api-card" style="margin-bottom:24px">
+      <div class="card-header open" style="cursor:default">
+        <span class="method-badge method-POST">POST</span>
+        <div>
+          <div class="endpoint-path">/api/survey/houses/&lt;house_id&gt;/family/</div>
+          <div class="card-title-text">Android Field Agent — Family Details Form (Single or Multiple Members)</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addFamilyRowUI()">➕ Add Member Row</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillSampleFamilyForm()">✨ Auto-Fill Sample Family (3)</button>
+        </div>
+      </div>
+      <div class="card-body open">
+        <!-- Select House -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Select Uploaded House (fetched via <code>GET /api/survey/houses/</code>)</label>
+            <div style="display:flex;gap:8px">
+              <select class="form-control" id="ff-house-select" onchange="onSelectFamilyHouse(this.value)">
+                <option value="">— Click Refresh or enter House ID —</option>
+              </select>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="loadHousesForDropdown()">🔄 Refresh</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Target House ID <span>*</span></label>
+            <input class="form-control" id="ff-house-id" type="number" placeholder="e.g. 1" oninput="loadExistingFamilyTable(this.value)"/>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Dynamic Family Member Rows -->
+        <div id="ff-members-container"></div>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px">
+          <button class="btn btn-primary" onclick="submitFamilyFormInteractive()">📤 Submit Family Form via API</button>
+          <button class="btn btn-secondary" onclick="addFamilyRowUI()">➕ Add Another Member</button>
+          <button class="btn btn-secondary" onclick="loadExistingFamilyTable()">🔄 Fetch Saved Family List (GET)</button>
+        </div>
+
+        <div id="ff-api-response"></div>
+
+        <!-- Live Saved Family Table -->
+        <div id="ff-saved-table-wrap" style="margin-top:20px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ADMIN AUTH ── -->
+  <section class="section" id="admin-auth">
+    <div class="section-header">
+      <h2>🔐 Admin Authentication</h2>
+      <p>Register and login as admin. Token is auto-saved for subsequent requests.</p>
+    </div>
+    <div class="cards-grid">
+
+      <!-- Register Admin -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-POST">POST</span>
+          <div>
+            <div class="endpoint-path">/api/auth/admin/register/</div>
+            <div class="card-title-text">Register new admin account</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="info-note">Public endpoint — no token needed.</div>
+          <div class="form-row">
+            <div class="form-group"><label>Username <span>*</span></label><input class="form-control" id="ar-username" value="admin" placeholder="admin"/></div>
+            <div class="form-group"><label>Email</label><input class="form-control" id="ar-email" type="email" value="admin@wardsurvey.com" placeholder="admin@example.com"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Password <span>*</span></label><input class="form-control" id="ar-password" type="password" value="Admin@1234" placeholder="Min 6 chars"/></div>
+            <div class="form-group"><label>Confirm Password <span>*</span></label><input class="form-control" id="ar-confirm" type="password" value="Admin@1234"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>First Name</label><input class="form-control" id="ar-first" value="Super"/></div>
+            <div class="form-group"><label>Last Name</label><input class="form-control" id="ar-last" value="Admin"/></div>
+          </div>
+          <div class="form-group"><label>Phone</label><input class="form-control" id="ar-phone" value="9876543210" placeholder="10-digit number"/></div>
+          <button class="btn btn-primary" onclick="adminRegister()">📤 Send Request</button>
+          <div id="ar-response"></div>
+        </div>
+      </div>
+
+      <!-- Admin Login -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-POST">POST</span>
+          <div>
+            <div class="endpoint-path">/api/auth/admin/login/</div>
+            <div class="card-title-text">Admin login — auto-saves token</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group"><label>Username <span>*</span></label><input class="form-control" id="al-username" value="admin"/></div>
+            <div class="form-group"><label>Password <span>*</span></label><input class="form-control" id="al-password" type="password" value="Admin@1234"/></div>
+          </div>
+          <button class="btn btn-primary" onclick="adminLogin()">🔑 Login</button>
+          <div id="al-response"></div>
+        </div>
+      </div>
+
+      <!-- Logout -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-POST">POST</span>
+          <div>
+            <div class="endpoint-path">/api/auth/logout/</div>
+            <div class="card-title-text">Logout — deletes token from server</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="info-note">Uses your currently saved token.</div>
+          <button class="btn btn-danger" onclick="logout()">🚪 Logout</button>
+          <div id="logout-response"></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── AGENT AUTH ── -->
+  <section class="section" id="agent-auth">
+    <div class="section-header">
+      <h2>🪪 Field Agent Authentication</h2>
+      <p>Register (Admin only) and login as field agent.</p>
+    </div>
+    <div class="cards-grid">
+
+      <!-- Register Agent -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-POST">POST</span>
+          <div>
+            <div class="endpoint-path">/api/auth/agent/register/</div>
+            <div class="card-title-text">Register field agent — Admin token required</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="info-note"><strong>Admin token required.</strong> Login as admin first.</div>
+          <div class="form-row">
+            <div class="form-group"><label>Username <span>*</span></label><input class="form-control" id="agr-username" placeholder="agent01"/></div>
+            <div class="form-group"><label>Phone</label><input class="form-control" id="agr-phone" placeholder="9123456789"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Password <span>*</span></label><input class="form-control" id="agr-password" type="password" placeholder="Min 6 chars"/></div>
+            <div class="form-group"><label>Confirm Password <span>*</span></label><input class="form-control" id="agr-confirm" type="password" placeholder="Repeat password"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>First Name</label><input class="form-control" id="agr-first" placeholder="Ravi"/></div>
+            <div class="form-group"><label>Last Name</label><input class="form-control" id="agr-last" placeholder="Kumar"/></div>
+          </div>
+          <div class="form-group"><label>Email</label><input class="form-control" id="agr-email" type="email" placeholder="agent01@wardsurvey.com"/></div>
+          <button class="btn btn-primary" onclick="agentRegister()">📤 Send Request</button>
+          <div id="agr-response"></div>
+        </div>
+      </div>
+
+      <!-- Agent Login -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-POST">POST</span>
+          <div>
+            <div class="endpoint-path">/api/auth/agent/login/</div>
+            <div class="card-title-text">Field agent login — auto-saves token</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group"><label>Username <span>*</span></label><input class="form-control" id="agl-username" placeholder="agent01"/></div>
+            <div class="form-group"><label>Password <span>*</span></label><input class="form-control" id="agl-password" type="password" placeholder="Password"/></div>
+          </div>
+          <button class="btn btn-primary" onclick="agentLogin()">🔑 Login as Agent</button>
+          <div id="agl-response"></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── PROFILE ── -->
+  <section class="section" id="profile">
+    <div class="section-header">
+      <h2>👤 My Profile</h2>
+      <p>View and update the currently authenticated user's profile.</p>
+    </div>
+    <div class="cards-grid">
+      <div class="api-card">
+        <div class="card-header open" onclick="toggleCard(this)">
+          <span class="method-badge method-GET">GET</span>
+          <div>
+            <div class="endpoint-path">/api/auth/profile/</div>
+            <div class="card-title-text">View my profile</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body open">
+          <button class="btn btn-primary" onclick="getProfile()">📤 Send Request</button>
+          <div id="profile-get-response"></div>
+        </div>
+      </div>
+
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-PATCH">PATCH</span>
+          <div>
+            <div class="endpoint-path">/api/auth/profile/</div>
+            <div class="card-title-text">Update my profile</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group"><label>First Name</label><input class="form-control" id="pu-first" placeholder="New first name"/></div>
+            <div class="form-group"><label>Last Name</label><input class="form-control" id="pu-last" placeholder="New last name"/></div>
+          </div>
+          <div class="form-group"><label>Phone</label><input class="form-control" id="pu-phone" placeholder="New phone"/></div>
+          <button class="btn btn-primary" onclick="updateProfile()">📤 Send Request</button>
+          <div id="profile-patch-response"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── AGENTS ── -->
+  <section class="section" id="agents">
+    <div class="section-header">
+      <h2>👥 Agent Management</h2>
+      <p>List, view, activate/deactivate, and delete field agents. Admin token required.</p>
+    </div>
+    <div class="cards-grid">
+
+      <!-- List Agents -->
+      <div class="api-card">
+        <div class="card-header open" onclick="toggleCard(this)">
+          <span class="method-badge method-GET">GET</span>
+          <div>
+            <div class="endpoint-path">/api/auth/agents/</div>
+            <div class="card-title-text">List all field agents with house counts</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body open">
+          <button class="btn btn-primary" onclick="listAgents()">📤 Send Request</button>
+          <div id="agents-list-response"></div>
+        </div>
+      </div>
+
+      <!-- Agent Detail -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-GET">GET</span>
+          <div>
+            <div class="endpoint-path">/api/auth/agents/&lt;id&gt;/</div>
+            <div class="card-title-text">Get single agent detail</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>Agent ID <span>*</span></label><input class="form-control" id="agd-id" placeholder="e.g. 2"/></div>
+          <button class="btn btn-primary" onclick="agentDetail()">📤 Send Request</button>
+          <div id="agd-response"></div>
+        </div>
+      </div>
+
+      <!-- Toggle Active -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-PATCH">PATCH</span>
+          <div>
+            <div class="endpoint-path">/api/auth/agents/&lt;id&gt;/toggle-active/</div>
+            <div class="card-title-text">Activate / Deactivate agent (force logout)</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="info-note">Deactivating <strong>immediately deletes the agent's token</strong> — force logout.</div>
+          <div class="form-group"><label>Agent ID <span>*</span></label><input class="form-control" id="agt-id" placeholder="e.g. 2"/></div>
+          <button class="btn btn-primary" onclick="toggleAgent()">⚡ Toggle Active</button>
+          <div id="agt-response"></div>
+        </div>
+      </div>
+
+      <!-- Delete Agent -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-DELETE">DELETE</span>
+          <div>
+            <div class="endpoint-path">/api/auth/agents/&lt;id&gt;/</div>
+            <div class="card-title-text">Permanently delete field agent</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>Agent ID <span>*</span></label><input class="form-control" id="agdel-id" placeholder="e.g. 2"/></div>
+          <button class="btn btn-danger" onclick="deleteAgent()">🗑 Delete Agent</button>
+          <div id="agdel-response"></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── HOUSES ── -->
+  <section class="section" id="houses">
+    <div class="section-header">
+      <h2>🏠 House Surveys</h2>
+      <p>Submit, list, view, update and delete house survey records.</p>
+    </div>
+    <div class="cards-grid">
+
+      <!-- Submit House -->
+      <div class="api-card" style="grid-column:1/-1">
+        <div class="card-header open" onclick="toggleCard(this)">
+          <span class="method-badge method-POST">POST</span>
+          <div>
+            <div class="endpoint-path">/api/survey/houses/</div>
+            <div class="card-title-text">Submit house survey with multiple angle photos</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body open">
+          <div class="info-note">Field agent token required. Photos are stored inside the project at <strong>media/house_photos/&lt;house_id&gt;/</strong></div>
+          <div class="form-row">
+            <div class="form-group"><label>House Number <span>*</span></label><input class="form-control" id="hs-hno" placeholder="e.g. 12A"/></div>
+            <div class="form-group"><label>Ward No <span>*</span></label><input class="form-control" id="hs-ward" placeholder="e.g. Ward-05"/></div>
+          </div>
+          <div class="form-group"><label>Address <span>*</span></label><textarea class="form-control" id="hs-address" placeholder="Full address..."></textarea></div>
+          <div class="form-row">
+            <div class="form-group"><label>Landmark</label><input class="form-control" id="hs-landmark" placeholder="Near post office"/></div>
+            <div class="form-group"><label>Owner Name <span>*</span></label><input class="form-control" id="hs-owner" placeholder="Ramesh Gowda"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Ownership <span>*</span></label>
+              <select class="form-control" id="hs-ownership">
+                <option value="own">Own</option><option value="rent">Rent</option>
+                <option value="lease">Lease</option><option value="others">Others</option>
+              </select>
+            </div>
+            <div class="form-group"><label>House Type <span>*</span></label>
+              <select class="form-control" id="hs-type">
+                <option value="permanent">Permanent</option>
+                <option value="semi_permanent">Semi-Permanent</option>
+                <option value="temporary">Temporary</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Roof Type <span>*</span></label>
+              <select class="form-control" id="hs-roof">
+                <option value="rcc">RCC</option><option value="tiles">Tiles</option>
+                <option value="asbestos">Asbestos</option><option value="thatched">Thatched</option>
+                <option value="others">Others</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Water Source <span>*</span></label>
+              <select class="form-control" id="hs-water">
+                <option value="tap">Tap Water</option><option value="well">Well</option>
+                <option value="borewell">Borewell</option><option value="river">River</option>
+                <option value="others">Others</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Electricity <span>*</span></label>
+              <select class="form-control" id="hs-elec">
+                <option value="yes">Yes</option><option value="no">No</option><option value="solar">Solar</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Toilet <span>*</span></label>
+              <select class="form-control" id="hs-toilet">
+                <option value="yes">Yes (Private)</option><option value="no">No</option><option value="shared">Shared</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Ration Card <span>*</span></label>
+              <select class="form-control" id="hs-ration">
+                <option value="apl">APL</option><option value="bpl">BPL</option>
+                <option value="aay">AAY (Antyodaya)</option><option value="none">None</option>
+              </select>
+            </div>
+            <div class="form-group"><label>GPS Latitude</label><input class="form-control" id="hs-lat" placeholder="12.971598" type="number" step="any"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>GPS Longitude</label><input class="form-control" id="hs-lng" placeholder="77.594566" type="number" step="any"/></div>
+            <div class="form-group"><label>Remarks</label><input class="form-control" id="hs-remarks" placeholder="Optional remarks..."/></div>
+          </div>
+
+          <!-- Photo Upload -->
+          <div class="form-group">
+            <label>📸 House Photos (Multiple angles)</label>
+            <div class="file-input-wrapper" id="photoDropZone">
+              <input type="file" id="hs-photos" multiple accept="image/*" onchange="previewPhotos(this)"/>
+              <div class="file-hint">Drop photos here or <strong>click to browse</strong><br/>JPG, PNG, WEBP — multiple files allowed</div>
+              <div class="file-count" id="hs-photo-count"></div>
+            </div>
+            <div class="photo-previews" id="hs-previews"></div>
+          </div>
+          <div class="form-group"><label>Captions (comma separated, one per photo)</label>
+            <input class="form-control" id="hs-captions" placeholder="Front view, Back view, Interior"/>
+          </div>
+
+          <button class="btn btn-primary" onclick="submitHouse()">📤 Submit House Survey</button>
+          <div id="hs-response"></div>
+        </div>
+      </div>
+
+      <!-- List Houses -->
+      <div class="api-card">
+        <div class="card-header open" onclick="toggleCard(this)">
+          <span class="method-badge method-GET">GET</span>
+          <div>
+            <div class="endpoint-path">/api/survey/houses/</div>
+            <div class="card-title-text">List houses (Admin=all, Agent=own)</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body open">
+          <button class="btn btn-primary" onclick="listHouses()">📤 Send Request</button>
+          <div id="house-list-response"></div>
+        </div>
+      </div>
+
+      <!-- House Detail -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-GET">GET</span>
+          <div>
+            <div class="endpoint-path">/api/survey/houses/&lt;id&gt;/</div>
+            <div class="card-title-text">House detail with photos and family</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>House ID <span>*</span></label><input class="form-control" id="hd-id" placeholder="e.g. 1"/></div>
+          <button class="btn btn-primary" onclick="houseDetail()">📤 Send Request</button>
+          <div id="hd-response"></div>
+        </div>
+      </div>
+
+      <!-- Update House -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-PATCH">PATCH</span>
+          <div>
+            <div class="endpoint-path">/api/survey/houses/&lt;id&gt;/</div>
+            <div class="card-title-text">Update house survey (Agent, own only)</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>House ID <span>*</span></label><input class="form-control" id="hu-id" placeholder="e.g. 1"/></div>
+          <div class="form-row">
+            <div class="form-group"><label>Remarks</label><input class="form-control" id="hu-remarks" placeholder="Updated remarks"/></div>
+            <div class="form-group"><label>Electricity</label>
+              <select class="form-control" id="hu-elec">
+                <option value="">— no change —</option>
+                <option value="yes">Yes</option><option value="no">No</option><option value="solar">Solar</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group"><label>Raw JSON (overrides above fields if filled)</label>
+            <textarea class="form-control" id="hu-json" placeholder='{"remarks":"Updated", "electricity":"solar"}'></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="updateHouse()">📤 Send Request</button>
+          <div id="hu-response"></div>
+        </div>
+      </div>
+
+      <!-- Delete House -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-DELETE">DELETE</span>
+          <div>
+            <div class="endpoint-path">/api/survey/houses/&lt;id&gt;/</div>
+            <div class="card-title-text">Delete house survey (Admin only)</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>House ID <span>*</span></label><input class="form-control" id="hdel-id" placeholder="e.g. 1"/></div>
+          <button class="btn btn-danger" onclick="deleteHouse()">🗑 Delete House</button>
+          <div id="hdel-response"></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── PHOTOS ── -->
+  <section class="section" id="photos">
+    <div class="section-header">
+      <h2>📸 House Photos</h2>
+      <p>Upload multiple angle photos, list and delete individual photos.</p>
+    </div>
+    <div class="cards-grid">
+
+      <!-- Upload Photos -->
+      <div class="api-card">
+        <div class="card-header open" onclick="toggleCard(this)">
+          <span class="method-badge method-POST">POST</span>
+          <div>
+            <div class="endpoint-path">/api/survey/houses/&lt;id&gt;/photos/</div>
+            <div class="card-title-text">Upload additional photos for a house</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body open">
+          <div class="form-group"><label>House ID <span>*</span></label><input class="form-control" id="ph-id" placeholder="e.g. 1"/></div>
+          <div class="form-group">
+            <label>📸 Select Photos (multiple)</label>
+            <div class="file-input-wrapper">
+              <input type="file" id="ph-photos" multiple accept="image/*" onchange="previewPhotosExtra(this)"/>
+              <div class="file-hint">Select multiple angle photos — <strong>JPG, PNG, WEBP</strong></div>
+              <div class="file-count" id="ph-count"></div>
+            </div>
+            <div class="photo-previews" id="ph-previews"></div>
+          </div>
+          <div class="form-group"><label>Captions (comma separated)</label>
+            <input class="form-control" id="ph-captions" placeholder="Left side, Right side, Roof"/>
+          </div>
+          <button class="btn btn-primary" onclick="uploadPhotos()">📤 Upload Photos</button>
+          <div id="ph-response"></div>
+        </div>
+      </div>
+
+      <!-- List Photos -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-GET">GET</span>
+          <div>
+            <div class="endpoint-path">/api/survey/houses/&lt;id&gt;/photos/</div>
+            <div class="card-title-text">List all photos for a house</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>House ID <span>*</span></label><input class="form-control" id="phl-id" placeholder="e.g. 1"/></div>
+          <button class="btn btn-primary" onclick="listPhotos()">📤 Send Request</button>
+          <div id="phl-response"></div>
+        </div>
+      </div>
+
+      <!-- Delete Photo -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-DELETE">DELETE</span>
+          <div>
+            <div class="endpoint-path">/api/survey/photos/&lt;photo_id&gt;/</div>
+            <div class="card-title-text">Delete a single photo (also removes file)</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>Photo ID <span>*</span></label><input class="form-control" id="phd-id" placeholder="e.g. 3"/></div>
+          <button class="btn btn-danger" onclick="deletePhoto()">🗑 Delete Photo</button>
+          <div id="phd-response"></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── FAMILY ── -->
+  <section class="section" id="family">
+    <div class="section-header">
+      <h2>👨‍👩‍👧‍👦 Family Members</h2>
+      <p>Add single or bulk family members, view, update and delete.</p>
+    </div>
+    <div class="cards-grid">
+
+      <!-- Add Single Member -->
+      <div class="api-card">
+        <div class="card-header open" onclick="toggleCard(this)">
+          <span class="method-badge method-POST">POST</span>
+          <div>
+            <div class="endpoint-path">/api/survey/houses/&lt;id&gt;/family/</div>
+            <div class="card-title-text">Add family member(s)</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body open">
+          <div class="form-group"><label>House ID <span>*</span></label><input class="form-control" id="fm-hid" placeholder="e.g. 1"/></div>
+          <div class="divider"></div>
+          <div class="form-row">
+            <div class="form-group"><label>Full Name <span>*</span></label><input class="form-control" id="fm-name" placeholder="Ramesh Gowda"/></div>
+            <div class="form-group"><label>Relationship <span>*</span></label>
+              <select class="form-control" id="fm-rel">
+                <option value="head">Head of Family</option><option value="spouse">Spouse</option>
+                <option value="son">Son</option><option value="daughter">Daughter</option>
+                <option value="father">Father</option><option value="mother">Mother</option>
+                <option value="others">Others</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Gender <span>*</span></label>
+              <select class="form-control" id="fm-gender">
+                <option value="male">Male</option><option value="female">Female</option><option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Date of Birth <span>*</span></label>
+              <input class="form-control" id="fm-dob" type="date"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Age <span>*</span></label><input class="form-control" id="fm-age" type="number" placeholder="35"/></div>
+            <div class="form-group"><label>Phone</label><input class="form-control" id="fm-phone" placeholder="9876543210"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Education</label><input class="form-control" id="fm-edu" placeholder="10th Standard"/></div>
+            <div class="form-group"><label>Occupation</label><input class="form-control" id="fm-occ" placeholder="Farmer"/></div>
+          </div>
+          <button class="btn btn-primary" onclick="addFamilyMember()">📤 Add Member</button>
+          <div id="fm-response"></div>
+        </div>
+      </div>
+
+      <!-- List Members -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-GET">GET</span>
+          <div>
+            <div class="endpoint-path">/api/survey/houses/&lt;id&gt;/family/</div>
+            <div class="card-title-text">List all family members of a house</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>House ID <span>*</span></label><input class="form-control" id="fml-id" placeholder="e.g. 1"/></div>
+          <button class="btn btn-primary" onclick="listFamilyMembers()">📤 Send Request</button>
+          <div id="fml-response"></div>
+        </div>
+      </div>
+
+      <!-- Single Member Detail -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-GET">GET</span>
+          <div>
+            <div class="endpoint-path">/api/survey/family/&lt;member_id&gt;/</div>
+            <div class="card-title-text">Get single family member detail</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>Member ID <span>*</span></label><input class="form-control" id="fmd-id" placeholder="e.g. 1"/></div>
+          <button class="btn btn-primary" onclick="getFamilyMember()">📤 Send Request</button>
+          <div id="fmd-response"></div>
+        </div>
+      </div>
+
+      <!-- Update Member -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-PATCH">PATCH</span>
+          <div>
+            <div class="endpoint-path">/api/survey/family/&lt;member_id&gt;/</div>
+            <div class="card-title-text">Update family member details</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>Member ID <span>*</span></label><input class="form-control" id="fmu-id" placeholder="e.g. 1"/></div>
+          <div class="form-group"><label>Raw JSON (partial update)</label>
+            <textarea class="form-control" id="fmu-json" placeholder='{"occupation":"Labourer","age":52}'></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="updateFamilyMember()">📤 Send Request</button>
+          <div id="fmu-response"></div>
+        </div>
+      </div>
+
+      <!-- Delete Member -->
+      <div class="api-card">
+        <div class="card-header" onclick="toggleCard(this)">
+          <span class="method-badge method-DELETE">DELETE</span>
+          <div>
+            <div class="endpoint-path">/api/survey/family/&lt;member_id&gt;/</div>
+            <div class="card-title-text">Delete a family member</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group"><label>Member ID <span>*</span></label><input class="form-control" id="fmdel-id" placeholder="e.g. 1"/></div>
+          <button class="btn btn-danger" onclick="deleteFamilyMember()">🗑 Delete Member</button>
+          <div id="fmdel-response"></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── REPORT ── -->
+  <section class="section" id="report">
+    <div class="section-header">
+      <h2>📋 Admin Full Report</h2>
+      <p>Retrieve all house surveys with complete details — photos, family members, and field agent info.</p>
+    </div>
+    <div class="cards-grid">
+      <div class="api-card" style="grid-column:1/-1">
+        <div class="card-header open" onclick="toggleCard(this)">
+          <span class="method-badge method-GET">GET</span>
+          <div>
+            <div class="endpoint-path">/api/survey/admin/report/</div>
+            <div class="card-title-text">Full report — all houses with photos and family members</div>
+          </div>
+          <span class="card-chevron">▼</span>
+        </div>
+        <div class="card-body open">
+          <div class="info-note"><strong>Admin token required.</strong> Returns every house record with nested photos and family members.</div>
+          <button class="btn btn-primary" onclick="adminReport()">📤 Fetch Full Report</button>
+          <div id="report-response"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main><!-- /main -->
+
+<script>
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let authToken  = localStorage.getItem('wardSurveyToken') || '';
+let activeUser = JSON.parse(localStorage.getItem('wardSurveyUser') || 'null');
+updateTokenDisplay();
+
+// Verify saved session on startup via real API
+if (authToken) {
+  fetch('/api/auth/profile/', { headers: { 'Authorization': 'Token ' + authToken } })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(user => {
+      activeUser = user;
+      localStorage.setItem('wardSurveyUser', JSON.stringify(user));
+      updateTokenDisplay();
+    })
+    .catch(() => {
+      authToken = '';
+      activeUser = null;
+      localStorage.removeItem('wardSurveyToken');
+      localStorage.removeItem('wardSurveyUser');
+      updateTokenDisplay();
+    });
+}
+
+// ═══════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════
+function showSection(id, navEl) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (navEl) navEl.classList.add('active');
+}
+
+function toggleCard(header) {
+  header.classList.toggle('open');
+  header.nextElementSibling.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════
+//  TOKEN MANAGEMENT
+// ═══════════════════════════════════════════
+function setToken(token, user = null) {
+  authToken = token;
+  localStorage.setItem('wardSurveyToken', token);
+  if (user) {
+    activeUser = user;
+    localStorage.setItem('wardSurveyUser', JSON.stringify(user));
+  }
+  updateTokenDisplay();
+}
+
+function updateTokenDisplay() {
+  const el = document.getElementById('sidebarToken');
+  const userEl = document.getElementById('sidebarUser');
+  const badgeEl = document.getElementById('sidebarRoleBadge');
+  el.textContent = authToken ? authToken : '— not logged in —';
+  if (authToken && activeUser) {
+    userEl.textContent = `👤 ${activeUser.username}`;
+    const isAdmin = activeUser.role === 'admin';
+    badgeEl.textContent = isAdmin ? 'Admin' : 'Field Agent';
+    badgeEl.style.background = isAdmin ? 'rgba(108,99,255,0.2)' : 'rgba(16,185,129,0.2)';
+    badgeEl.style.color = isAdmin ? '#a78bfa' : '#34d399';
+  } else if (authToken) {
+    userEl.textContent = 'Token Active';
+    badgeEl.textContent = 'Authenticated';
+  } else {
+    userEl.textContent = 'Not logged in';
+    badgeEl.textContent = 'Guest';
+    badgeEl.style.background = 'rgba(255,255,255,0.06)';
+    badgeEl.style.color = 'var(--text3)';
+  }
+  if (typeof renderRoleBanners === 'function') renderRoleBanners();
+}
+
+function copyToken() {
+  if (!authToken) { toast('No token to copy', 'error'); return; }
+  navigator.clipboard.writeText(authToken).then(() => toast('Token copied!', 'success'));
+}
+
+function clearToken() {
+  authToken = '';
+  activeUser = null;
+  localStorage.removeItem('wardSurveyToken');
+  localStorage.removeItem('wardSurveyUser');
+  updateTokenDisplay();
+  toast('Token cleared', 'info');
+}
+
+// ═══════════════════════════════════════════
+//  HTTP HELPERS
+// ═══════════════════════════════════════════
+function headers(includeAuth = true, contentType = 'application/json') {
+  const h = {};
+  if (contentType) h['Content-Type'] = contentType;
+  if (includeAuth && authToken) h['Authorization'] = 'Token ' + authToken;
+  return h;
+}
+
+async function apiCall(method, url, body = null, isFormData = false, includeAuth = true) {
+  const start = Date.now();
+  const reqHeaders = isFormData
+    ? (includeAuth && authToken ? { 'Authorization': 'Token ' + authToken } : {})
+    : headers(includeAuth);
+  const opts = { method, headers: reqHeaders };
+  if (body) opts.body = isFormData ? body : JSON.stringify(body);
+  try {
+    const res = await fetch(url, opts);
+    const elapsed = Date.now() - start;
+    let data;
+    try { data = await res.json(); } catch(e) { data = { status: res.status, message: res.statusText || 'No Content' }; }
+    return { ok: res.ok, status: res.status, data, elapsed, method, url };
+  } catch(err) {
+    return { ok: false, status: 0, data: { error: err.message }, elapsed: 0, method, url };
+  }
+}
+
+// ═══════════════════════════════════════════
+//  RESPONSE RENDERER + VISUAL MEDIA PREVIEW
+// ═══════════════════════════════════════════
+function collectPhotos(data) {
+  if (!data || typeof data !== 'object') return [];
+  if (Array.isArray(data.photos)) return data.photos;
+  if (data.house && Array.isArray(data.house.photos)) return data.house.photos;
+  if (Array.isArray(data.houses)) {
+    const all = [];
+    data.houses.forEach(h => { if (Array.isArray(h.photos)) all.push(...h.photos); });
+    return all;
+  }
+  return [];
+}
+
+function renderResponse(containerId, result) {
+  const el = document.getElementById(containerId);
+  const statusColor = result.ok ? 'ok' : 'err';
+  const statusText  = result.ok ? '✅ ' + result.status : '❌ ' + result.status;
+  const photos = collectPhotos(result.data);
+  let galleryHtml = '';
+  if (photos.length) {
+    const thumbs = photos.map(p => {
+      const src = p.photo_url || p.photo;
+      const cap = p.caption || `Photo #${p.id}`;
+      return `<a href="${src}" target="_blank" title="${cap}" style="text-decoration:none;text-align:center">
+        <img src="${src}" class="photo-thumb" style="width:80px;height:80px"/>
+        <div style="font-size:10px;color:var(--text2);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px">#${p.id} ${cap}</div>
+      </a>`;
+    }).join('');
+    galleryHtml = `<div style="padding:12px 14px;background:var(--bg2);border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--accent2);font-weight:600;margin-bottom:8px">🖼️ Stored Server Photos (${photos.length}) — click to open full image</div>
+      <div class="photo-previews">${thumbs}</div>
+    </div>`;
+  }
+  el.innerHTML = `
+    <div class="response-box">
+      <div class="response-header">
+        <div class="response-status">
+          <div class="status-dot ${statusColor}"></div>
+          ${statusText} <span style="color:var(--text3);font-weight:400;font-family:'JetBrains Mono',monospace;font-size:11px;margin-left:6px">${result.method || ''} ${result.url || ''}</span>
+        </div>
+        <span class="response-time">${result.elapsed}ms</span>
+      </div>
+      <div class="response-body">${syntaxHighlight(JSON.stringify(result.data, null, 2))}</div>
+      ${galleryHtml}
+    </div>`;
+}
+
+function syntaxHighlight(json) {
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
+    let cls = 'json-number';
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) cls = 'json-key';
+      else cls = 'json-string';
+    } else if (/true|false/.test(match)) cls = 'json-bool';
+    else if (/null/.test(match)) cls = 'json-null';
+    return `<span class="${cls}">${match}</span>`;
+  });
+}
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+function toast(msg, type='info') {
+  const icons = { success:'✅', error:'❌', info:'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ═══════════════════════════════════════════
+//  BUTTON LOADING STATE
+// ═══════════════════════════════════════════
+function getBtn() {
+  const ev = window.event;
+  return ev ? (ev.currentTarget || ev.target.closest('button') || ev.target) : null;
+}
+
+function setLoading(btn, loading) {
+  if (!btn) return;
+  if (loading) {
+    btn._txt = btn.innerHTML;
+    btn.innerHTML = '<div class="spinner"></div> Sending...';
+    btn.disabled = true;
+  } else {
+    btn.innerHTML = btn._txt;
+    btn.disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  PHOTO PREVIEW
+// ═══════════════════════════════════════════
+function previewPhotos(input) {
+  const previews = document.getElementById('hs-previews');
+  const count    = document.getElementById('hs-photo-count');
+  previews.innerHTML = '';
+  count.textContent  = input.files.length ? `${input.files.length} photo(s) selected` : '';
+  Array.from(input.files).forEach(f => {
+    const img = document.createElement('img');
+    img.className = 'photo-thumb';
+    img.src = URL.createObjectURL(f);
+    previews.appendChild(img);
+  });
+}
+
+function previewPhotosExtra(input) {
+  const previews = document.getElementById('ph-previews');
+  const count    = document.getElementById('ph-count');
+  previews.innerHTML = '';
+  count.textContent  = input.files.length ? `${input.files.length} photo(s) selected` : '';
+  Array.from(input.files).forEach(f => {
+    const img = document.createElement('img');
+    img.className = 'photo-thumb';
+    img.src = URL.createObjectURL(f);
+    previews.appendChild(img);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  ── API CALLS ──
+// ═══════════════════════════════════════════
+
+// Quick login (overview) — public endpoint (includeAuth=false)
+async function quickLogin() {
+  const btn = getBtn();
+  setLoading(btn, true);
+  const r = await apiCall('POST', '/api/auth/admin/login/', {
+    username: document.getElementById('ql-username').value,
+    password: document.getElementById('ql-password').value,
+  }, false, false);
+  setLoading(btn, false);
+  renderResponse('ql-response', r);
+  if (r.ok && r.data.token) { setToken(r.data.token, r.data.user); toast('Logged in! Token saved ✅', 'success'); }
+  else toast('Login failed', 'error');
+}
+
+// Admin Register — public endpoint (includeAuth=false)
+async function adminRegister() {
+  const btn = getBtn(); setLoading(btn, true);
+  const r = await apiCall('POST', '/api/auth/admin/register/', {
+    username: document.getElementById('ar-username').value,
+    password: document.getElementById('ar-password').value,
+    confirm_password: document.getElementById('ar-confirm').value,
+    email: document.getElementById('ar-email').value,
+    first_name: document.getElementById('ar-first').value,
+    last_name: document.getElementById('ar-last').value,
+    phone: document.getElementById('ar-phone').value,
+  }, false, false);
+  setLoading(btn, false);
+  renderResponse('ar-response', r);
+  if (r.ok && r.data.token) { setToken(r.data.token, r.data.user); toast('Admin registered & logged in!', 'success'); }
+}
+
+// Admin Login — public endpoint (includeAuth=false)
+async function adminLogin() {
+  const btn = getBtn(); setLoading(btn, true);
+  const r = await apiCall('POST', '/api/auth/admin/login/', {
+    username: document.getElementById('al-username').value,
+    password: document.getElementById('al-password').value,
+  }, false, false);
+  setLoading(btn, false);
+  renderResponse('al-response', r);
+  if (r.ok && r.data.token) { setToken(r.data.token, r.data.user); toast('Admin logged in! Token saved.', 'success'); }
+}
+
+// Logout
+async function logout() {
+  const btn = getBtn(); setLoading(btn, true);
+  const r = await apiCall('POST', '/api/auth/logout/');
+  setLoading(btn, false);
+  renderResponse('logout-response', r);
+  if (r.ok) { clearToken(); toast('Logged out', 'info'); }
+}
+
+// Get Profile
+async function getProfile() {
+  const btn = getBtn(); setLoading(btn, true);
+  const r = await apiCall('GET', '/api/auth/profile/');
+  setLoading(btn, false);
+  renderResponse('profile-get-response', r);
+  if (r.ok && r.data.username) {
+    activeUser = r.data;
+    localStorage.setItem('wardSurveyUser', JSON.stringify(r.data));
+    updateTokenDisplay();
+  }
+}
+
+// Update Profile
+async function updateProfile() {
+  const btn = getBtn(); setLoading(btn, true);
+  const body = {};
+  const f = document.getElementById('pu-first').value;
+  const l = document.getElementById('pu-last').value;
+  const p = document.getElementById('pu-phone').value;
+  if (f) body.first_name = f;
+  if (l) body.last_name  = l;
+  if (p) body.phone      = p;
+  const r = await apiCall('PATCH', '/api/auth/profile/', body);
+  setLoading(btn, false);
+  renderResponse('profile-patch-response', r);
+  if (r.ok) toast('Profile updated!', 'success');
+}
+
+// Agent Register (Admin token required)
+async function agentRegister() {
+  const btn = getBtn(); setLoading(btn, true);
+  const r = await apiCall('POST', '/api/auth/agent/register/', {
+    username: document.getElementById('agr-username').value,
+    email: document.getElementById('agr-email').value,
+    password: document.getElementById('agr-password').value,
+    confirm_password: document.getElementById('agr-confirm').value,
+    phone: document.getElementById('agr-phone').value,
+    first_name: document.getElementById('agr-first').value,
+    last_name: document.getElementById('agr-last').value,
+  });
+  setLoading(btn, false);
+  renderResponse('agr-response', r);
+  if (r.ok) toast('Agent registered!', 'success');
+}
+
+// Agent Login — public endpoint (includeAuth=false)
+async function agentLogin() {
+  const btn = getBtn(); setLoading(btn, true);
+  const r = await apiCall('POST', '/api/auth/agent/login/', {
+    username: document.getElementById('agl-username').value,
+    password: document.getElementById('agl-password').value,
+  }, false, false);
+  setLoading(btn, false);
+  renderResponse('agl-response', r);
+  if (r.ok && r.data.token) { setToken(r.data.token, r.data.user); toast('Agent logged in! Token saved.', 'success'); }
+}
+
+// List Agents
+async function listAgents() {
+  const btn = getBtn(); setLoading(btn, true);
+  const r = await apiCall('GET', '/api/auth/agents/');
+  setLoading(btn, false);
+  renderResponse('agents-list-response', r);
+}
+
+// Agent Detail
+async function agentDetail() {
+  const btn = getBtn(); setLoading(btn, true);
+  const id = document.getElementById('agd-id').value;
+  const r = await apiCall('GET', `/api/auth/agents/${id}/`);
+  setLoading(btn, false);
+  renderResponse('agd-response', r);
+}
+
+// Toggle Agent
+async function toggleAgent() {
+  const btn = getBtn(); setLoading(btn, true);
+  const id = document.getElementById('agt-id').value;
+  const r = await apiCall('PATCH', `/api/auth/agents/${id}/toggle-active/`);
+  setLoading(btn, false);
+  renderResponse('agt-response', r);
+  if (r.ok) toast(`Agent ${r.data.is_active ? 'activated ✅' : 'deactivated ⛔'}`, r.data.is_active ? 'success' : 'info');
+}
+
+// Delete Agent
+async function deleteAgent() {
+  if (!confirm('Delete this agent? This cannot be undone.')) return;
+  const btn = getBtn(); setLoading(btn, true);
+  const id = document.getElementById('agdel-id').value;
+  const r = await apiCall('DELETE', `/api/auth/agents/${id}/`);
+  setLoading(btn, false);
+  renderResponse('agdel-response', r);
+  if (r.ok || r.status === 204) toast('Agent deleted', 'info');
+}
+
+// Submit House Survey
+async function submitHouse() {
+  const btn = getBtn(); setLoading(btn, true);
+  const fd = new FormData();
+  fd.append('house_number',    document.getElementById('hs-hno').value);
+  fd.append('ward_no',         document.getElementById('hs-ward').value);
+  fd.append('address',         document.getElementById('hs-address').value);
+  fd.append('landmark',        document.getElementById('hs-landmark').value);
+  fd.append('owner_name',      document.getElementById('hs-owner').value);
+  fd.append('ownership',       document.getElementById('hs-ownership').value);
+  fd.append('house_type',      document.getElementById('hs-type').value);
+  fd.append('roof_type',       document.getElementById('hs-roof').value);
+  fd.append('water_source',    document.getElementById('hs-water').value);
+  fd.append('electricity',     document.getElementById('hs-elec').value);
+  fd.append('toilet',          document.getElementById('hs-toilet').value);
+  fd.append('ration_card_type',document.getElementById('hs-ration').value);
+  const lat = document.getElementById('hs-lat').value;
+  const lng = document.getElementById('hs-lng').value;
+  if (lat) fd.append('latitude',  lat);
+  if (lng) fd.append('longitude', lng);
+  fd.append('remarks', document.getElementById('hs-remarks').value);
+
+  // Photos
+  const photos   = document.getElementById('hs-photos').files;
+  const captions = document.getElementById('hs-captions').value.split(',').map(c => c.trim()).filter(Boolean);
+  Array.from(photos).forEach(f => fd.append('photos', f));
+  captions.forEach(c => fd.append('captions', c));
+
+  const r = await apiCall('POST', '/api/survey/houses/', fd, true);
+  setLoading(btn, false);
+  renderResponse('hs-response', r);
+  if (r.ok) toast(`House survey submitted! ID: ${r.data.house?.id}`, 'success');
+}
+
+// List Houses
+async function listHouses() {
+  const btn = getBtn(); setLoading(btn, true);
+  const r = await apiCall('GET', '/api/survey/houses/');
+  setLoading(btn, false);
+  renderResponse('house-list-response', r);
+}
+
+// House Detail
+async function houseDetail() {
+  const btn = getBtn(); setLoading(btn, true);
+  const id = document.getElementById('hd-id').value;
+  const r = await apiCall('GET', `/api/survey/houses/${id}/`);
+  setLoading(btn, false);
+  renderResponse('hd-response', r);
+}
+
+// Update House
+async function updateHouse() {
+  const btn = getBtn(); setLoading(btn, true);
+  const id = document.getElementById('hu-id').value;
+  let body = {};
+  const raw = document.getElementById('hu-json').value.trim();
+  if (raw) {
+    try { body = JSON.parse(raw); } catch(e) { toast('Invalid JSON', 'error'); setLoading(btn,false); return; }
+  } else {
+    const remarks = document.getElementById('hu-remarks').value;
+    const elec    = document.getElementById('hu-elec').value;
+    if (remarks) body.remarks     = remarks;
+    if (elec)    body.electricity = elec;
+  }
+  const r = await apiCall('PATCH', `/api/survey/houses/${id}/`, body);
+  setLoading(btn, false);
+  renderResponse('hu-response', r);
+  if (r.ok) toast('House updated!', 'success');
+}
+
+// Delete House
+async function deleteHouse() {
+  if (!confirm('Delete this house survey? All photos and family data will be lost.')) return;
+  const btn = getBtn(); setLoading(btn, true);
+  const id = document.getElementById('hdel-id').value;
+  const r = await apiCall('DELETE', `/api/survey/houses/${id}/`);
+  setLoading(btn, false);
+  renderResponse('hdel-response', r);
+  if (r.ok || r.status === 204) toast('House deleted', 'info');
+}
+
+// Upload Photos
+async function uploadPhotos() {
+  const btn = getBtn(); setLoading(btn, true);
+  const id = document.getElementById('ph-id').value;
+  const fd = new FormData();
+  const photos   = document.getElementById('ph-photos').files;
+  const captions = document.getElementById('ph-captions').value.split(',').map(c=>c.trim()).filter(Boolean);
+  if (!photos.length) { toast('Select at least one photo', 'error'); setLoading(btn,false); return; }
+  Array.from(photos).forEach(f => fd.append('photos', f));
+  captions.forEach(c => fd.append('captions', c));
+  const r = await apiCall('POST', `/api/survey/houses/${id}/photos/`, fd, true);
+  setLoading(btn, false);
+  renderResponse('ph-response', r);
+  if (r.ok) toast(`${r.data.photos?.length || 0} photo(s) uploaded!`, 'success');
+}
+
+// List Photos
+async function listPhotos() {
+  const btn = getBtn(); setLoading(btn, true);
+  const id = document.getElementById('phl-id').value;
+  const r = await apiCall('GET', `/api/survey/houses/${id}/photos/`);
+  setLoading(btn, false);
+  renderResponse('phl-response', r);
+}
+
+// Delete Photo
+async function deletePhoto() {
+  if (!confirm('Delete this photo permanently?')) return;
+  const btn = getBtn(); setLoading(btn, true);
+  const id = document.getElementById('phd-id').value;
+  const r = await apiCall('DELETE', `/api/survey/photos/${id}/`);
+  setLoading(btn, false);
+  renderResponse('phd-response', r);
+  if (r.ok || r.status === 204) toast('Photo deleted', 'info');
+}
+
+// Add Family Member
+async function addFamilyMember() {
+  const btn = getBtn(); setLoading(btn, true);
+  const id = document.getElementById('fm-hid').value;
+  const body = {
+    name:         document.getElementById('fm-name').value,
+    relationship: document.getElementById('fm-rel').value,
+    gender:       document.getElementById('fm-gender').value,
+    dob:          document.getElementById('fm-dob').value,
+    age:          parseInt(document.getElementById('fm-age').value),
+    phone:        document.getElementById('fm-phone').value,
+    education:    document.getElementById('fm-edu').value,
+    occupation:   document.getElementById('fm-occ').value,
+  };
+  const r = await apiCall('POST', `/api/survey/houses/${id}/family/`, body);
+  setLoading(btn, false);
+  renderResponse('fm-response', r);
+  if (r.ok) toast('Family member added!', 'success');
+}
+
+// List Family Members
+async function listFamilyMembers() {
+  const btn = getBtn(); setLoading(btn, true);
+  const id = document.getElementById('fml-id').value;
+  const r = await apiCall('GET', `/api/survey/houses/${id}/family/`);
+  setLoading(btn, false);
+  renderResponse('fml-response', r);
+}
+
+// Single Family Member Detail
+async function getFamilyMember() {
+  const btn = getBtn(); setLoading(btn, true);
+  const id = document.getElementById('fmd-id').value;
+  const r = await apiCall('GET', `/api/survey/family/${id}/`);
+  setLoading(btn, false);
+  renderResponse('fmd-response', r);
+}
+
+// Update Family Member
+async function updateFamilyMember() {
+  const btn = getBtn(); setLoading(btn, true);
+  const id = document.getElementById('fmu-id').value;
+  let body = {};
+  const raw = document.getElementById('fmu-json').value.trim();
+  if (raw) { try { body = JSON.parse(raw); } catch(e) { toast('Invalid JSON','error'); setLoading(btn,false); return; } }
+  const r = await apiCall('PATCH', `/api/survey/family/${id}/`, body);
+  setLoading(btn, false);
+  renderResponse('fmu-response', r);
+  if (r.ok) toast('Member updated!', 'success');
+}
+
+// Delete Family Member
+async function deleteFamilyMember() {
+  if (!confirm('Delete this family member?')) return;
+  const btn = getBtn(); setLoading(btn, true);
+  const id = document.getElementById('fmdel-id').value;
+  const r = await apiCall('DELETE', `/api/survey/family/${id}/`);
+  setLoading(btn, false);
+  renderResponse('fmdel-response', r);
+  if (r.ok || r.status === 204) toast('Member deleted', 'info');
+}
+
+// Admin Report
+async function adminReport() {
+  const btn = getBtn(); setLoading(btn, true);
+  const r = await apiCall('GET', '/api/survey/admin/report/');
+  setLoading(btn, false);
+  renderResponse('report-response', r);
+  if (r.ok) toast(`Report loaded — ${r.data.total_houses} houses`, 'success');
+}
+
+// ═══════════════════════════════════════════
+//  ── INTERACTIVE HOME FORM & FAMILY FORM ──
+// ═══════════════════════════════════════════
+let homeFormFiles = []; // Array of { file, caption }
+let familyRowCounter = 0;
+
+function jumpToSection(id) {
+  const navMap = {
+    'home-form': document.getElementById('nav-home-form'),
+    'family-form': document.getElementById('nav-family-form'),
+  };
+  showSection(id, navMap[id] || null);
+  renderRoleBanners();
+}
+
+function renderRoleBanners() {
+  const isAgent = authToken && activeUser && activeUser.role === 'field_agent';
+  const html = isAgent
+    ? `<div class="role-alert ready">
+         <span>✅ <strong>Field Agent Session Active:</strong> Logged in as <strong>${activeUser.username}</strong> — ready to submit forms via API.</span>
+         <span style="font-family:'JetBrains Mono',monospace;font-size:11px">Role: field_agent</span>
+       </div>`
+    : `<div class="role-alert warn">
+         <span>⚠️ <strong>Field Agent Token Required:</strong> ${activeUser ? `Currently logged in as <strong>${activeUser.username} (${activeUser.role})</strong>.` : 'Not logged in.'} Only Field Agents can submit Home &amp; Family forms.</span>
+         <button type="button" class="btn btn-success btn-sm" onclick="switchToDefaultAgent()">🪪 Switch to Field Agent (agent01)</button>
+       </div>`;
+  const hb = document.getElementById('home-role-banner');
+  const fb = document.getElementById('family-role-banner');
+  if (hb) hb.innerHTML = html;
+  if (fb) fb.innerHTML = html;
+}
+
+async function quickAgentLogin() {
+  const btn = getBtn(); setLoading(btn, true);
+  const r = await apiCall('POST', '/api/auth/agent/login/', {
+    username: document.getElementById('qal-username').value,
+    password: document.getElementById('qal-password').value,
+  }, false, false);
+  setLoading(btn, false);
+  renderResponse('qal-response', r);
+  if (r.ok && r.data.token) {
+    setToken(r.data.token, r.data.user);
+    toast(`Field Agent ${r.data.user.username} logged in! ✅`, 'success');
+  } else {
+    toast('Agent login failed', 'error');
+  }
+  return r;
+}
+
+async function quickAgentLoginAndOpenHome() {
+  const r = await quickAgentLogin();
+  if (r && r.ok) jumpToSection('home-form');
+}
+
+async function switchToDefaultAgent() {
+  const btn = getBtn(); setLoading(btn, true);
+  const r = await apiCall('POST', '/api/auth/agent/login/', {
+    username: 'agent01',
+    password: 'Agent@1234',
+  }, false, false);
+  setLoading(btn, false);
+  if (r.ok && r.data.token) {
+    setToken(r.data.token, r.data.user);
+    toast('Switched to Field Agent (agent01) ✅', 'success');
+    loadHousesForDropdown();
+  } else {
+    toast('Could not login as agent01 — check Agent Auth tab', 'error');
+  }
+}
+
+// ── HOME FORM HELPERS ──
+function fillSampleHomeForm() {
+  const num = Math.floor(100 + Math.random() * 899);
+  document.getElementById('hf-house-number').value = `HN-${num}/A`;
+  document.getElementById('hf-ward-no').value      = 'Ward-05';
+  document.getElementById('hf-owner-name').value   = 'Ramesh Gowda';
+  document.getElementById('hf-address').value      = `${num}, 4th Cross, Gandhi Nagar, Ward 05`;
+  document.getElementById('hf-landmark').value     = 'Near Govt Higher Primary School';
+  document.getElementById('hf-ownership').value    = 'own';
+  document.getElementById('hf-house-type').value   = 'permanent';
+  document.getElementById('hf-roof-type').value    = 'rcc';
+  document.getElementById('hf-water-source').value = 'tap';
+  document.getElementById('hf-electricity').value  = 'yes';
+  document.getElementById('hf-toilet').value       = 'yes';
+  document.getElementById('hf-ration-card').value  = 'bpl';
+  document.getElementById('hf-latitude').value     = '12.971598';
+  document.getElementById('hf-longitude').value    = '77.594566';
+  document.getElementById('hf-remarks').value      = 'Two-storey residential house in good condition.';
+  toast('Sample Home Form data filled!', 'info');
+}
+
+function captureHomeGPS() {
+  if (!navigator.geolocation) {
+    toast('Geolocation not supported by browser', 'error');
+    return;
+  }
+  toast('Fetching GPS coordinates...', 'info');
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      document.getElementById('hf-latitude').value  = pos.coords.latitude.toFixed(6);
+      document.getElementById('hf-longitude').value = pos.coords.longitude.toFixed(6);
+      toast('GPS coordinates captured! 📍', 'success');
+    },
+    err => {
+      document.getElementById('hf-latitude').value  = '12.971598';
+      document.getElementById('hf-longitude').value = '77.594566';
+      toast('GPS permission denied — filled sample coordinates', 'info');
+    }
+  );
+}
+
+function handleHomeFormPhotos(input) {
+  const defaultAngles = ['Front View', 'Back View', 'Left Side', 'Right Side', 'Roof View', 'Interior'];
+  Array.from(input.files).forEach((file) => {
+    const caption = defaultAngles[homeFormFiles.length % defaultAngles.length];
+    homeFormFiles.push({ file, caption });
+  });
+  input.value = '';
+  renderHomeAngleCards();
+}
+
+function renderHomeAngleCards() {
+  const grid = document.getElementById('hf-angle-cards');
+  if (!grid) return;
+  if (!homeFormFiles.length) {
+    grid.innerHTML = '';
+    return;
+  }
+  const angles = ['Front View', 'Back View', 'Left Side', 'Right Side', 'Roof View', 'Interior'];
+  grid.innerHTML = homeFormFiles.map((item, idx) => {
+    const url = URL.createObjectURL(item.file);
+    const opts = angles.map(a => `<option value="${a}" ${item.caption === a ? 'selected' : ''}>${a}</option>`).join('');
+    return `
+      <div class="angle-photo-card">
+        <img src="${url}" alt="Angle ${idx + 1}"/>
+        <select class="form-control" style="padding:5px 8px;font-size:11.5px" onchange="homeFormFiles[${idx}].caption=this.value">
+          ${opts}
+        </select>
+        <input class="form-control" style="padding:5px 8px;font-size:11px" value="${item.caption}" placeholder="Custom angle caption" oninput="homeFormFiles[${idx}].caption=this.value"/>
+        <button type="button" class="btn btn-danger btn-sm" style="width:100%;justify-content:center;padding:4px" onclick="removeHomePhoto(${idx})">✕ Remove</button>
+      </div>`;
+  }).join('');
+}
+
+function removeHomePhoto(idx) {
+  homeFormFiles.splice(idx, 1);
+  renderHomeAngleCards();
+}
+
+function generateSampleCanvasPhotos() {
+  const samples = [
+    { label: 'Front View', bg1: '#1e3a8a', bg2: '#3b82f6' },
+    { label: 'Left Side',  bg1: '#065f46', bg2: '#10b981' },
+    { label: 'Back View',  bg1: '#581c87', bg2: '#8b5cf6' },
+  ];
+  homeFormFiles = [];
+  let done = 0;
+  samples.forEach((s, i) => {
+    const c = document.createElement('canvas');
+    c.width = 640; c.height = 420;
+    const ctx = c.getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 640, 420);
+    grad.addColorStop(0, s.bg1); grad.addColorStop(1, s.bg2);
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, 640, 420);
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillRect(170, 140, 300, 190);
+    ctx.beginPath(); ctx.moveTo(140, 140); ctx.lineTo(320, 60); ctx.lineTo(500, 140); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 28px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(`House ${s.label}`, 320, 240);
+    ctx.font = '16px monospace'; ctx.fillText(`Angle #${i + 1} • API Test Image`, 320, 275);
+    c.toBlob(blob => {
+      const file = new File([blob], `house_${s.label.toLowerCase().replace(/\s+/g,'_')}.png`, { type: 'image/png' });
+      homeFormFiles.push({ file, caption: s.label });
+      done++;
+      if (done === samples.length) {
+        renderHomeAngleCards();
+        toast('Generated 3 multi-angle test photos! 📸', 'success');
+      }
+    }, 'image/png');
+  });
+}
+
+async function submitHomeFormInteractive() {
+  const btn = getBtn(); setLoading(btn, true);
+  const fd = new FormData();
+  fd.append('house_number',     document.getElementById('hf-house-number').value);
+  fd.append('ward_no',          document.getElementById('hf-ward-no').value);
+  fd.append('owner_name',       document.getElementById('hf-owner-name').value);
+  fd.append('address',          document.getElementById('hf-address').value);
+  fd.append('landmark',         document.getElementById('hf-landmark').value);
+  fd.append('ownership',        document.getElementById('hf-ownership').value);
+  fd.append('house_type',       document.getElementById('hf-house-type').value);
+  fd.append('roof_type',        document.getElementById('hf-roof-type').value);
+  fd.append('water_source',     document.getElementById('hf-water-source').value);
+  fd.append('electricity',      document.getElementById('hf-electricity').value);
+  fd.append('toilet',           document.getElementById('hf-toilet').value);
+  fd.append('ration_card_type', document.getElementById('hf-ration-card').value);
+  const lat = document.getElementById('hf-latitude').value;
+  const lng = document.getElementById('hf-longitude').value;
+  if (lat) fd.append('latitude', lat);
+  if (lng) fd.append('longitude', lng);
+  fd.append('remarks', document.getElementById('hf-remarks').value);
+
+  homeFormFiles.forEach(item => {
+    fd.append('photos', item.file);
+    fd.append('captions', item.caption || '');
+  });
+
+  const r = await apiCall('POST', '/api/survey/houses/', fd, true);
+  setLoading(btn, false);
+  renderResponse('hf-api-response', r);
+
+  if (r.ok && r.data.house) {
+    const newId = r.data.house.id;
+    toast(`Home Form saved! House ID #${newId}`, 'success');
+    document.getElementById('ff-house-id').value = newId;
+    document.getElementById('hf-next-step').innerHTML = `
+      <button type="button" class="btn btn-success" onclick="jumpToSection('family-form');loadHousesForDropdown(${newId})">
+        ✅ House #${newId} Created — Fill Family Form →
+      </button>`;
+  } else {
+    toast('Home Form submission failed — check response below', 'error');
+  }
+}
+
+// ── FAMILY FORM HELPERS ──
+async function loadHousesForDropdown(selectedId = null) {
+  renderRoleBanners();
+  if (!authToken) return;
+  const r = await apiCall('GET', '/api/survey/houses/');
+  const sel = document.getElementById('ff-house-select');
+  if (!sel) return;
+  if (r.ok && Array.isArray(r.data.houses)) {
+    const currentVal = selectedId || document.getElementById('ff-house-id').value || (r.data.houses[0]?.id || '');
+    sel.innerHTML = `<option value="">— Select House (${r.data.houses.length} available) —</option>` +
+      r.data.houses.map(h => `<option value="${h.id}" ${String(h.id) === String(currentVal) ? 'selected' : ''}>#${h.id} — House ${h.house_number} (${h.ward_no}) • ${h.owner_name}</option>`).join('');
+    if (currentVal) {
+      document.getElementById('ff-house-id').value = currentVal;
+      loadExistingFamilyTable(currentVal);
+    }
+  }
+}
+
+function onSelectFamilyHouse(val) {
+  if (val) {
+    document.getElementById('ff-house-id').value = val;
+    loadExistingFamilyTable(val);
+  }
+}
+
+function addFamilyRowUI(prefill = null) {
+  familyRowCounter++;
+  const rid = familyRowCounter;
+  const container = document.getElementById('ff-members-container');
+  const d = prefill || { name: '', relationship: 'head', gender: 'male', dob: '', age: '', education: '', occupation: '', phone: '' };
+  const div = document.createElement('div');
+  div.className = 'member-row-card';
+  div.id = `ff-row-${rid}`;
+  div.innerHTML = `
+    <div class="member-row-header">
+      <strong style="font-size:12.5px;color:var(--accent2)">👤 Family Member #${container.children.length + 1}</strong>
+      <button type="button" class="btn btn-danger btn-sm" style="padding:4px 10px;font-size:11px" onclick="removeFamilyRowUI('ff-row-${rid}')">✕ Remove Row</button>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group">
+        <label>Full Name <span>*</span></label>
+        <input class="form-control ff-name" value="${d.name}" placeholder="e.g. Ramesh Gowda"/>
+      </div>
+      <div class="form-group">
+        <label>Relationship <span>*</span></label>
+        <select class="form-control ff-rel">
+          <option value="head" ${d.relationship==='head'?'selected':''}>Head of Family (head)</option>
+          <option value="spouse" ${d.relationship==='spouse'?'selected':''}>Spouse (spouse)</option>
+          <option value="son" ${d.relationship==='son'?'selected':''}>Son (son)</option>
+          <option value="daughter" ${d.relationship==='daughter'?'selected':''}>Daughter (daughter)</option>
+          <option value="father" ${d.relationship==='father'?'selected':''}>Father (father)</option>
+          <option value="mother" ${d.relationship==='mother'?'selected':''}>Mother (mother)</option>
+          <option value="others" ${d.relationship==='others'?'selected':''}>Others (others)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Gender <span>*</span></label>
+        <select class="form-control ff-gender">
+          <option value="male" ${d.gender==='male'?'selected':''}>Male (male)</option>
+          <option value="female" ${d.gender==='female'?'selected':''}>Female (female)</option>
+          <option value="other" ${d.gender==='other'?'selected':''}>Other (other)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-row" style="margin:0">
+        <div class="form-group">
+          <label>Date of Birth (DOB) <span>*</span></label>
+          <input class="form-control ff-dob" type="date" value="${d.dob}" onchange="calcAgeForRow(this)"/>
+        </div>
+        <div class="form-group">
+          <label>Age <span>*</span></label>
+          <input class="form-control ff-age" type="number" value="${d.age}" placeholder="38"/>
+        </div>
+      </div>
+      <div class="form-row" style="margin:0">
+        <div class="form-group">
+          <label>Education</label>
+          <input class="form-control ff-edu" value="${d.education}" placeholder="e.g. Graduate / PUC"/>
+        </div>
+        <div class="form-group">
+          <label>Occupation</label>
+          <input class="form-control ff-occ" value="${d.occupation}" placeholder="e.g. Farmer / Teacher"/>
+        </div>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label>Phone Number</label>
+      <input class="form-control ff-phone" value="${d.phone}" placeholder="9876543210"/>
+    </div>`;
+  container.appendChild(div);
+}
+
+function removeFamilyRowUI(rowId) {
+  const container = document.getElementById('ff-members-container');
+  if (container.children.length <= 1) {
+    toast('At least one family member row is required', 'info');
+    return;
+  }
+  const el = document.getElementById(rowId);
+  if (el) el.remove();
+}
+
+function calcAgeForRow(dobInput) {
+  if (!dobInput.value) return;
+  const dob = new Date(dobInput.value);
+  const now = new Date();
+  let age = now.getFullYear() - dob.getFullYear();
+  const m = now.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
+  const card = dobInput.closest('.member-row-card');
+  if (card && age >= 0) card.querySelector('.ff-age').value = age;
+}
+
+function fillSampleFamilyForm() {
+  const container = document.getElementById('ff-members-container');
+  container.innerHTML = '';
+  [
+    { name: 'Ramesh Gowda',  relationship: 'head',   gender: 'male',   dob: '1982-05-14', age: 44, education: 'PUC / 12th', occupation: 'Agriculture', phone: '9876543210' },
+    { name: 'Savitha Gowda', relationship: 'spouse', gender: 'female', dob: '1986-08-22', age: 40, education: 'B.A.',       occupation: 'Tailor',      phone: '9876543211' },
+    { name: 'Kiran Gowda',   relationship: 'son',    gender: 'male',   dob: '2008-11-10', age: 17, education: '11th Std',   occupation: 'Student',     phone: '' },
+  ].forEach(m => addFamilyRowUI(m));
+  toast('Filled 3 sample family members (tests bulk API)!', 'info');
+}
+
+async function submitFamilyFormInteractive() {
+  const houseId = document.getElementById('ff-house-id').value;
+  if (!houseId) {
+    toast('Enter or select a Target House ID first!', 'error');
+    return;
+  }
+  const cards = Array.from(document.querySelectorAll('#ff-members-container .member-row-card'));
+  const members = cards.map(card => ({
+    name:         card.querySelector('.ff-name').value.trim(),
+    relationship: card.querySelector('.ff-rel').value,
+    gender:       card.querySelector('.ff-gender').value,
+    dob:          card.querySelector('.ff-dob').value,
+    age:          parseInt(card.querySelector('.ff-age').value, 10),
+    education:    card.querySelector('.ff-edu').value.trim(),
+    occupation:   card.querySelector('.ff-occ').value.trim(),
+    phone:        card.querySelector('.ff-phone').value.trim(),
+  }));
+
+  // Send single object if 1 row, or JSON array if multiple rows (tests both Android modes)
+  const payload = members.length === 1 ? members[0] : members;
+  const btn = getBtn(); setLoading(btn, true);
+  const r = await apiCall('POST', `/api/survey/houses/${houseId}/family/`, payload);
+  setLoading(btn, false);
+  renderResponse('ff-api-response', r);
+
+  if (r.ok) {
+    toast(`${members.length} family member(s) saved to House #${houseId}! ✅`, 'success');
+    loadExistingFamilyTable(houseId);
+  } else {
+    toast('Family Form submission failed — check response', 'error');
+  }
+}
+
+async function loadExistingFamilyTable(explicitHouseId = null) {
+  const houseId = explicitHouseId || document.getElementById('ff-house-id').value;
+  const wrap = document.getElementById('ff-saved-table-wrap');
+  if (!houseId || !authToken || !wrap) return;
+  const r = await apiCall('GET', `/api/survey/houses/${houseId}/family/`);
+  if (!r.ok || !Array.isArray(r.data.family_members)) {
+    wrap.innerHTML = '';
+    return;
+  }
+  const list = r.data.family_members;
+  if (!list.length) {
+    wrap.innerHTML = `<div class="info-note" style="margin-top:12px">House #${houseId} currently has <strong>0 saved family members</strong>.</div>`;
+    return;
+  }
+  const rows = list.map(m => `
+    <tr>
+      <td>#${m.id}</td>
+      <td><strong>${m.name}</strong></td>
+      <td>${m.relationship_display || m.relationship}</td>
+      <td>${m.gender_display || m.gender}</td>
+      <td>${m.dob} (${m.age} yrs)</td>
+      <td>${m.education || '—'} / ${m.occupation || '—'}</td>
+      <td>${m.phone || '—'}</td>
+      <td><button type="button" class="btn btn-danger btn-sm" style="padding:3px 9px;font-size:11px" onclick="deleteSavedMemberRow(${m.id}, ${houseId})">🗑 Delete</button></td>
+    </tr>`).join('');
+  wrap.innerHTML = `
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent2)">👨‍👩‍👧‍👦 Saved Family Members for House #${houseId} (${list.length}) — via <code>GET /api/survey/houses/${houseId}/family/</code></div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Name</th><th>Relation</th><th>Gender</th><th>DOB &amp; Age</th><th>Edu / Occupation</th><th>Phone</th><th>Action</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+async function deleteSavedMemberRow(memberId, houseId) {
+  if (!confirm(`Delete family member #${memberId}?`)) return;
+  const r = await apiCall('DELETE', `/api/survey/family/${memberId}/`);
+  if (r.ok || r.status === 204) {
+    toast(`Deleted member #${memberId}`, 'info');
+    loadExistingFamilyTable(houseId);
+  } else {
+    toast('Failed to delete member', 'error');
+  }
+}
+
+// Initialize 1 blank row in Family Form + role banners on load
+addFamilyRowUI();
+renderRoleBanners();
+</script>
+</body>
+</html>
