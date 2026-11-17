@@ -1,3 +1,6 @@
+import base64
+import uuid
+from django.core.files.base import ContentFile
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -8,11 +11,11 @@ from .models import HouseSurvey, HousePhoto, FamilyMember
 from .serializers import (
     HouseSurveyListSerializer,
     HouseSurveyDetailSerializer,
-    HouseSurveyCreateSerializer,
+    HouseSurveyCreateUpdateSerializer,
     HousePhotoSerializer,
     FamilyMemberSerializer,
 )
-from accounts.permissions import IsAdminRole, IsFieldAgentRole
+from accounts.permissions import IsAdminRole
 
 
 # ─────────────────────────────────────────────
@@ -27,22 +30,91 @@ def get_house_for_user(pk, user):
     """
     try:
         if user.role == 'admin':
-            return HouseSurvey.objects.get(pk=pk)
+            return HouseSurvey.objects.prefetch_related('photos', 'family_members').select_related('field_agent').get(pk=pk)
         else:
-            return HouseSurvey.objects.get(pk=pk, field_agent=user)
+            return HouseSurvey.objects.prefetch_related('photos', 'family_members').select_related('field_agent').get(pk=pk, field_agent=user)
     except HouseSurvey.DoesNotExist:
         return None
 
 
+def _save_base64_image(b64_str, house, caption, prefix):
+    """Decode a data:image/...;base64,... string and save as HousePhoto."""
+    try:
+        if ';base64,' in b64_str:
+            header, data = b64_str.split(';base64,', 1)
+            ext = header.split('/')[-1].split(';')[0] or 'jpg'
+        else:
+            data = b64_str
+            ext = 'jpg'
+        decoded = base64.b64decode(data)
+        filename = f"{prefix}_{uuid.uuid4().hex[:8]}.{ext}"
+        photo_obj = HousePhoto(house=house, caption=caption)
+        photo_obj.photo.save(filename, ContentFile(decoded), save=True)
+        return photo_obj
+    except Exception:
+        return None
+
+
+def attach_uploaded_files_to_house(request, house):
+    """
+    Supports both:
+    1) Multipart files ('house_photo', 'public_land_photo', 'vacant_property_photo', or 'photos')
+    2) Base64 image strings passed in photo_url, public_land_photo_url, or vacant_property_photo_url
+    Saves files inside media/house_photos/<house_id>/ and sets absolute URLs on the HouseSurvey.
+    """
+    updated_fields = []
+
+    # Handle Base64 strings (both 'data:image/...;base64,...' and raw Android Base64)
+    for field_name, caption, prefix in [
+        ('photo_url', 'House Photo', 'house'),
+        ('public_land_photo_url', 'Public Land Photo', 'public_land'),
+        ('vacant_property_photo_url', 'Vacant Property Photo', 'vacant_property'),
+    ]:
+        val = getattr(house, field_name, None)
+        if isinstance(val, str) and val.strip() and not val.startswith(('http://', 'https://', '/media/')):
+            p = _save_base64_image(val.strip(), house, caption, prefix)
+            if p:
+                setattr(house, field_name, request.build_absolute_uri(p.photo.url))
+                updated_fields.append(field_name)
+
+    # Handle multipart uploaded files
+    if 'house_photo' in request.FILES:
+        p = HousePhoto.objects.create(house=house, photo=request.FILES['house_photo'], caption='House Photo')
+        house.photo_url = request.build_absolute_uri(p.photo.url)
+        updated_fields.append('photo_url')
+
+    if 'public_land_photo' in request.FILES:
+        p = HousePhoto.objects.create(house=house, photo=request.FILES['public_land_photo'], caption='Public Land Photo')
+        house.public_land_photo_url = request.build_absolute_uri(p.photo.url)
+        updated_fields.append('public_land_photo_url')
+
+    if 'vacant_property_photo' in request.FILES:
+        p = HousePhoto.objects.create(house=house, photo=request.FILES['vacant_property_photo'], caption='Vacant Property Photo')
+        house.vacant_property_photo_url = request.build_absolute_uri(p.photo.url)
+        updated_fields.append('vacant_property_photo_url')
+
+    photos = request.FILES.getlist('photos')
+    captions = request.data.getlist('captions') if hasattr(request.data, 'getlist') else []
+    for idx, photo_file in enumerate(photos):
+        caption = captions[idx] if idx < len(captions) else 'House Photo'
+        p = HousePhoto.objects.create(house=house, photo=photo_file, caption=caption)
+        if idx == 0 and not house.photo_url:
+            house.photo_url = request.build_absolute_uri(p.photo.url)
+            updated_fields.append('photo_url')
+
+    if updated_fields:
+        house.save(update_fields=list(set(updated_fields)))
+
+
 # ─────────────────────────────────────────────
-#  House Survey List & Create
-#  GET  /api/survey/houses/   → Admin sees all; Agent sees own
-#  POST /api/survey/houses/   → Field Agent only
+#  Haritha Kerala Household Survey — List & Create
+#  GET  /api/survey/houses/   (or /api/survey/surveys/) → Admin sees all; Agent sees own
+#  POST /api/survey/houses/   (or /api/survey/surveys/) → Field Agent submits full survey
 # ─────────────────────────────────────────────
 
 class HouseSurveyListCreateView(APIView):
     permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def get(self, request):
         if request.user.role == 'admin':
@@ -50,7 +122,7 @@ class HouseSurveyListCreateView(APIView):
         else:
             houses = HouseSurvey.objects.filter(field_agent=request.user).select_related('field_agent').prefetch_related('photos', 'family_members')
 
-        serializer = HouseSurveyListSerializer(houses, many=True)
+        serializer = HouseSurveyListSerializer(houses, many=True, context={'request': request})
         return Response(
             {
                 "count": houses.count(),
@@ -59,29 +131,23 @@ class HouseSurveyListCreateView(APIView):
         )
 
     def post(self, request):
-        # Only field agents can create surveys
         if request.user.role != 'field_agent':
             return Response(
                 {"error": "Only field agents can submit house surveys."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        serializer = HouseSurveyCreateSerializer(data=request.data, context={'request': request})
+        serializer = HouseSurveyCreateUpdateSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             house = serializer.save()
-
-            # Handle multiple photos uploaded along with the form
-            photos = request.FILES.getlist('photos')
-            captions = request.data.getlist('captions')
-            for idx, photo_file in enumerate(photos):
-                caption = captions[idx] if idx < len(captions) else ''
-                HousePhoto.objects.create(house=house, photo=photo_file, caption=caption)
-
+            attach_uploaded_files_to_house(request, house)
             detail_serializer = HouseSurveyDetailSerializer(house, context={'request': request})
             return Response(
                 {
-                    "message": "House survey submitted successfully.",
+                    "message": "Household survey submitted successfully.",
+                    "id": house.id,
                     "house": detail_serializer.data,
+                    "survey": detail_serializer.data['survey'],
                 },
                 status=status.HTTP_201_CREATED,
             )
@@ -89,15 +155,16 @@ class HouseSurveyListCreateView(APIView):
 
 
 # ─────────────────────────────────────────────
-#  House Survey Detail, Update, Delete
+#  House Survey — Detail, Update, Delete
 #  GET    /api/survey/houses/<id>/
 #  PATCH  /api/survey/houses/<id>/
+#  PUT    /api/survey/houses/<id>/
 #  DELETE /api/survey/houses/<id>/  (Admin only)
 # ─────────────────────────────────────────────
 
 class HouseSurveyDetailView(APIView):
     permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def get(self, request, pk):
         house = get_house_for_user(pk, request.user)
@@ -107,7 +174,12 @@ class HouseSurveyDetailView(APIView):
         return Response(serializer.data)
 
     def patch(self, request, pk):
-        # Field agents can only update their own; Admin cannot create surveys
+        return self._update(request, pk, partial=True)
+
+    def put(self, request, pk):
+        return self._update(request, pk, partial=True)
+
+    def _update(self, request, pk, partial=True):
         house = get_house_for_user(pk, request.user)
         if not house:
             return Response({"error": "House survey not found."}, status=status.HTTP_404_NOT_FOUND)
@@ -118,16 +190,19 @@ class HouseSurveyDetailView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        serializer = HouseSurveyCreateSerializer(
-            house, data=request.data, partial=True, context={'request': request}
+        serializer = HouseSurveyCreateUpdateSerializer(
+            house, data=request.data, partial=partial, context={'request': request}
         )
         if serializer.is_valid():
-            serializer.save()
+            house = serializer.save()
+            attach_uploaded_files_to_house(request, house)
             detail_serializer = HouseSurveyDetailSerializer(house, context={'request': request})
             return Response(
                 {
-                    "message": "House survey updated successfully.",
+                    "message": "Household survey updated successfully.",
+                    "id": house.id,
                     "house": detail_serializer.data,
+                    "survey": detail_serializer.data['survey'],
                 }
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -146,16 +221,47 @@ class HouseSurveyDetailView(APIView):
 
 
 # ─────────────────────────────────────────────
-#  House Photos — Add multiple angle photos
-#  POST   /api/survey/houses/<id>/photos/
+#  Standalone Photo Upload (returns photo_url for JSON payload)
+#  POST /api/survey/upload-photo/
+# ─────────────────────────────────────────────
+
+class StandalonePhotoUploadView(APIView):
+    """
+    Upload a photo before or during survey filling to get a full 'photo_url'
+    (for household_details.photo_url, public_land_photo_url, or vacant_property_photo_url).
+    """
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        photo_file = request.FILES.get('photo') or (request.FILES.getlist('photos')[0] if request.FILES.getlist('photos') else None)
+        if not photo_file:
+            return Response({"error": "No image provided. Send file under key 'photo'."}, status=status.HTTP_400_BAD_REQUEST)
+
+        caption = request.data.get('caption', 'Survey Photo')
+        house_id = request.data.get('house_id')
+        house = get_house_for_user(house_id, request.user) if house_id else None
+
+        photo_obj = HousePhoto.objects.create(house=house, photo=photo_file, caption=caption)
+        serializer = HousePhotoSerializer(photo_obj, context={'request': request})
+        return Response(
+            {
+                "message": "Photo uploaded successfully.",
+                "id": photo_obj.id,
+                "photo_url": serializer.data['photo_url'],
+                "caption": photo_obj.caption,
+                "photo": serializer.data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+# ─────────────────────────────────────────────
+#  House Photos — Add & List multiple photos for a specific house
+#  POST / GET /api/survey/houses/<id>/photos/
 # ─────────────────────────────────────────────
 
 class HousePhotoUploadView(APIView):
-    """
-    Upload one or more photos for a house survey.
-    Send as multipart form-data with key 'photos' (multiple files)
-    and optional 'captions' list.
-    """
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
@@ -171,15 +277,21 @@ class HousePhotoUploadView(APIView):
             )
 
         photos = request.FILES.getlist('photos')
+        if not photos and 'photo' in request.FILES:
+            photos = [request.FILES['photo']]
         if not photos:
             return Response({"error": "No photos provided. Use key 'photos'."}, status=status.HTTP_400_BAD_REQUEST)
 
-        captions = request.data.getlist('captions')
+        captions = request.data.getlist('captions') if hasattr(request.data, 'getlist') else []
         created_photos = []
         for idx, photo_file in enumerate(photos):
             caption = captions[idx] if idx < len(captions) else ''
             photo_obj = HousePhoto.objects.create(house=house, photo=photo_file, caption=caption)
             created_photos.append(photo_obj)
+
+        if not house.photo_url and created_photos:
+            house.photo_url = request.build_absolute_uri(created_photos[0].photo.url)
+            house.save(update_fields=['photo_url'])
 
         serializer = HousePhotoSerializer(created_photos, many=True, context={'request': request})
         return Response(
@@ -191,7 +303,6 @@ class HousePhotoUploadView(APIView):
         )
 
     def get(self, request, pk):
-        """List all photos for a house."""
         house = get_house_for_user(pk, request.user)
         if not house:
             return Response({"error": "House survey not found."}, status=status.HTTP_404_NOT_FOUND)
@@ -213,11 +324,9 @@ class HousePhotoDeleteView(APIView):
         except HousePhoto.DoesNotExist:
             return Response({"error": "Photo not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Admin can delete any; agent can only delete their own house photos
-        if request.user.role == 'field_agent' and photo.house.field_agent != request.user:
+        if request.user.role == 'field_agent' and photo.house and photo.house.field_agent != request.user:
             return Response({"error": "You can only delete photos from your own surveys."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Delete file from disk too
         photo.photo.delete(save=False)
         photo.delete()
         return Response({"message": "Photo deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
@@ -225,8 +334,7 @@ class HousePhotoDeleteView(APIView):
 
 # ─────────────────────────────────────────────
 #  Family Members — Add & List
-#  POST /api/survey/houses/<id>/family/
-#  GET  /api/survey/houses/<id>/family/
+#  POST / GET /api/survey/houses/<id>/family/
 # ─────────────────────────────────────────────
 
 class FamilyMemberListCreateView(APIView):
@@ -249,7 +357,6 @@ class FamilyMemberListCreateView(APIView):
         if not house:
             return Response({"error": "House survey not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Support single member or bulk list
         many = isinstance(request.data, list)
         serializer = FamilyMemberSerializer(data=request.data, many=many)
         if serializer.is_valid():
@@ -272,10 +379,8 @@ class FamilyMemberListCreateView(APIView):
 
 
 # ─────────────────────────────────────────────
-#  Family Member Detail, Update, Delete
-#  GET    /api/survey/family/<id>/
-#  PATCH  /api/survey/family/<id>/
-#  DELETE /api/survey/family/<id>/
+#  Family Member — Detail, Update, Delete
+#  GET / PATCH / DELETE /api/survey/family/<id>/
 # ─────────────────────────────────────────────
 
 class FamilyMemberDetailView(APIView):
@@ -319,7 +424,7 @@ class FamilyMemberDetailView(APIView):
 
 
 # ─────────────────────────────────────────────
-#  Admin: Full Report — all houses with details
+#  Admin: Full Report — all houses with full nested "survey" details
 #  GET /api/survey/admin/report/
 # ─────────────────────────────────────────────
 

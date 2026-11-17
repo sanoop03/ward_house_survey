@@ -462,11 +462,11 @@
     </div>
   </section>
 
-  <!-- ── FORM 1: HOME FORM (FIELD AGENT) ── -->
+  <!-- ── 8-TAB STEP-BY-STEP HARITHA KERALA SURVEY WIZARD (SINGLE API SUBMIT) ── -->
   <section class="section" id="home-form">
     <div class="section-header">
-      <h2>🏡 Form 1: Home Form — Live API Tester</h2>
-      <p>Tests <code>POST /api/survey/houses/</code> (multipart/form-data) — uploads multiple angle house photos to <code>media/house_photos/&lt;house_id&gt;/</code> and saves all 15 house fields.</p>
+      <h2>🌿 Haritha Kerala Household Survey — 8-Step Tab Wizard (Single API Call)</h2>
+      <p>Fill all 8 sections tab-by-tab (`Next →`) and click <strong>Submit Survey</strong> on Step 8/8 to send all 8 sections + family members + images in <strong>one single API call</strong> to <code>POST /api/survey/houses/</code>.</p>
     </div>
 
     <div id="home-role-banner"></div>
@@ -476,150 +476,329 @@
         <span class="method-badge method-POST">POST</span>
         <div>
           <div class="endpoint-path">/api/survey/houses/</div>
-          <div class="card-title-text">Android Field Agent — Home Survey Submission Form</div>
+          <div class="card-title-text" id="wiz-step-subtitle">Step 1 of 8 — Family &amp; Personal Details</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="fillSampleHomeForm()">✨ Auto-Fill Sample Data</button>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="captureHomeGPS()">📍 Get GPS Location</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillSampleHomeForm()">✨ Auto-Fill All 8 Tabs</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="captureHomeGPS()">📍 Get GPS</button>
         </div>
       </div>
+
       <div class="card-body open">
-        <!-- Row 1: House No, Ward No, Owner Name -->
-        <div class="form-row-3">
-          <div class="form-group">
-            <label>House Number <span>*</span></label>
-            <input class="form-control" id="hf-house-number" placeholder="e.g. HN-104/B"/>
+        <!-- Progress Bar & 8 Section Tabs -->
+        <div style="margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;font-weight:700;color:#34d399">
+            <span id="wiz-progress-label">Section 1 / 8 — Family &amp; Personal Details</span>
+            <span id="wiz-progress-pct">12%</span>
           </div>
-          <div class="form-group">
-            <label>Ward No <span>*</span></label>
-            <input class="form-control" id="hf-ward-no" placeholder="e.g. Ward-07"/>
+          <div style="height:6px;background:var(--bg3);border-radius:6px;overflow:hidden;margin-bottom:12px">
+            <div id="wiz-progress-bar" style="height:100%;width:12.5%;background:linear-gradient(90deg,#059669,#34d399);transition:.3s"></div>
           </div>
-          <div class="form-group">
-            <label>Owner Name <span>*</span></label>
-            <input class="form-control" id="hf-owner-name" placeholder="e.g. Ramesh Gowda"/>
-          </div>
-        </div>
-
-        <!-- Row 2: Address & Landmark -->
-        <div class="form-row">
-          <div class="form-group">
-            <label>Address <span>*</span></label>
-            <textarea class="form-control" id="hf-address" style="min-height:64px" placeholder="Full street / village address..."></textarea>
-          </div>
-          <div class="form-group">
-            <label>Landmark</label>
-            <textarea class="form-control" id="hf-landmark" style="min-height:64px" placeholder="e.g. Near Govt Primary School"></textarea>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+            <button type="button" class="btn btn-secondary btn-sm wiz-tab-btn" id="wiz-btn-1" onclick="goToWizardStep(1)" style="justify-content:flex-start;padding:7px 10px;font-size:11px;border-color:#10b981;color:#34d399">01 🏠 Family &amp; Personal</button>
+            <button type="button" class="btn btn-secondary btn-sm wiz-tab-btn" id="wiz-btn-2" onclick="goToWizardStep(2)" style="justify-content:flex-start;padding:7px 10px;font-size:11px">02 👨‍👩‍👧‍👦 Family Members</button>
+            <button type="button" class="btn btn-secondary btn-sm wiz-tab-btn" id="wiz-btn-3" onclick="goToWizardStep(3)" style="justify-content:flex-start;padding:7px 10px;font-size:11px">03 🚜 Agri &amp; Water</button>
+            <button type="button" class="btn btn-secondary btn-sm wiz-tab-btn" id="wiz-btn-4" onclick="goToWizardStep(4)" style="justify-content:flex-start;padding:7px 10px;font-size:11px">04 ♻️ Waste Mgmt</button>
+            <button type="button" class="btn btn-secondary btn-sm wiz-tab-btn" id="wiz-btn-5" onclick="goToWizardStep(5)" style="justify-content:flex-start;padding:7px 10px;font-size:11px">05 ☀️ Green &amp; EV</button>
+            <button type="button" class="btn btn-secondary btn-sm wiz-tab-btn" id="wiz-btn-6" onclick="goToWizardStep(6)" style="justify-content:flex-start;padding:7px 10px;font-size:11px">06 🏥 Health &amp; Access</button>
+            <button type="button" class="btn btn-secondary btn-sm wiz-tab-btn" id="wiz-btn-7" onclick="goToWizardStep(7)" style="justify-content:flex-start;padding:7px 10px;font-size:11px">07 🌳 Property &amp; Land</button>
+            <button type="button" class="btn btn-secondary btn-sm wiz-tab-btn" id="wiz-btn-8" onclick="goToWizardStep(8)" style="justify-content:flex-start;padding:7px 10px;font-size:11px">08 🐄 Animals &amp; Biz</button>
           </div>
         </div>
 
-        <!-- Row 3: Ownership, House Type, Roof Type -->
-        <div class="form-row-3">
-          <div class="form-group">
-            <label>Ownership <span>*</span></label>
-            <select class="form-control" id="hf-ownership">
-              <option value="own">Own (own)</option>
-              <option value="rent">Rent (rent)</option>
-              <option value="lease">Lease (lease)</option>
-              <option value="others">Others (others)</option>
-            </select>
+        <!-- ══════════ TAB 1/8: FAMILY & PERSONAL DETAILS ══════════ -->
+        <div class="wiz-pane" id="wiz-pane-1">
+          <div class="form-row-3">
+            <div class="form-group"><label>Head of the Family Name <span>*</span></label><input class="form-control" id="hf-head-name" value="Sanoop" oninput="syncFormToPayloadBox()"/></div>
+            <div class="form-group"><label>Residence Name <span>*</span></label><input class="form-control" id="hf-res-name" value="Green Villa" oninput="syncFormToPayloadBox()"/></div>
+            <div class="form-group"><label>House Type (Own / Rented) <span>*</span></label>
+              <select class="form-control" id="hf-res-type" onchange="syncFormToPayloadBox()">
+                <option value="OWNED">Own (OWNED)</option>
+                <option value="RENTED">Rented (RENTED)</option>
+              </select>
+            </div>
           </div>
-          <div class="form-group">
-            <label>House Type <span>*</span></label>
-            <select class="form-control" id="hf-house-type">
-              <option value="permanent">Permanent (permanent)</option>
-              <option value="semi_permanent">Semi-Permanent (semi_permanent)</option>
-              <option value="temporary">Temporary (temporary)</option>
-            </select>
+          <div class="form-row-3">
+            <div class="form-group"><label>House Name</label><input class="form-control" id="hf-house-name" value="Puthen Veedu" oninput="syncFormToPayloadBox()"/></div>
+            <div class="form-group"><label>House Number <span>*</span></label><input class="form-control" id="hf-house-number" value="123" oninput="syncFormToPayloadBox()"/></div>
+            <div class="form-group"><label>House Number Type (New / Old)</label>
+              <select class="form-control" id="hf-house-num-type" onchange="syncFormToPayloadBox()">
+                <option value="NEW">New (NEW)</option>
+                <option value="OLD">Old (OLD)</option>
+              </select>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Roof Type <span>*</span></label>
-            <select class="form-control" id="hf-roof-type">
-              <option value="rcc">RCC (rcc)</option>
-              <option value="tiles">Tiles (tiles)</option>
-              <option value="asbestos">Asbestos (asbestos)</option>
-              <option value="thatched">Thatched (thatched)</option>
-              <option value="others">Others (others)</option>
-            </select>
+          <div class="form-row-3">
+            <div class="form-group"><label>Phone Number <span>*</span></label><input class="form-control" id="hf-phone" value="+919876543210" oninput="syncFormToPayloadBox()"/></div>
+            <div class="form-group"><label>Blood Group <span>*</span></label>
+              <select class="form-control" id="hf-blood" onchange="syncFormToPayloadBox()">
+                <option value="O+">O+</option><option value="O-">O-</option>
+                <option value="A+">A+</option><option value="A-">A-</option>
+                <option value="B+">B+</option><option value="B-">B-</option>
+                <option value="AB+">AB+</option><option value="AB-">AB-</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Willing to Donate Blood?</label>
+              <select class="form-control" id="hf-donate" onchange="syncFormToPayloadBox()">
+                <option value="true">Yes (true)</option>
+                <option value="false">No (false)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row-3">
+            <div class="form-group"><label>Age <span>*</span></label><input class="form-control" id="hf-age" type="number" value="25" oninput="syncFormToPayloadBox()"/></div>
+            <div class="form-group"><label>Gender (M / F / T) <span>*</span></label>
+              <select class="form-control" id="hf-gender" onchange="syncFormToPayloadBox()">
+                <option value="M">M (Male)</option>
+                <option value="F">F (Female)</option>
+                <option value="T">T (Transgender)</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Education <span>*</span></label><input class="form-control" id="hf-edu" value="Degree" oninput="syncFormToPayloadBox()"/></div>
+          </div>
+          <div class="form-row-3">
+            <div class="form-group"><label>Occupation <span>*</span></label><input class="form-control" id="hf-occ" value="Software Developer" oninput="syncFormToPayloadBox()"/></div>
+            <div class="form-group"><label>Location Address <span>*</span></label><input class="form-control" id="hf-address" value="Nilambur, Kerala, India" oninput="syncFormToPayloadBox()"/></div>
+            <div class="form-group"><label>Photo URL (or upload file below)</label><input class="form-control" id="hf-photo-url" value="https://example.com/photo.jpg" oninput="syncFormToPayloadBox()"/></div>
+          </div>
+          <div class="form-row-3">
+            <div class="form-group"><label>GPS Latitude</label><input class="form-control" id="hf-latitude" type="number" step="any" value="11.123456" oninput="syncFormToPayloadBox()"/></div>
+            <div class="form-group"><label>GPS Longitude</label><input class="form-control" id="hf-longitude" type="number" step="any" value="76.123456" oninput="syncFormToPayloadBox()"/></div>
+            <div class="form-group"><label>📸 Upload House Photo (from Mobile/PC)</label><input type="file" class="form-control" id="hf-file-house" accept="image/*"/></div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:14px">
+            <button type="button" class="btn btn-success" onclick="goToWizardStep(2)">Next: 02 Family Members →</button>
           </div>
         </div>
 
-        <!-- Row 4: Water Source, Electricity, Toilet, Ration Card -->
-        <div class="form-row">
-          <div class="form-row" style="margin:0">
-            <div class="form-group">
-              <label>Water Source <span>*</span></label>
-              <select class="form-control" id="hf-water-source">
-                <option value="tap">Tap Water (tap)</option>
-                <option value="well">Well (well)</option>
-                <option value="borewell">Borewell (borewell)</option>
-                <option value="river">River (river)</option>
-                <option value="others">Others (others)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Electricity <span>*</span></label>
-              <select class="form-control" id="hf-electricity">
-                <option value="yes">Yes (yes)</option>
-                <option value="no">No (no)</option>
-                <option value="solar">Solar (solar)</option>
-              </select>
-            </div>
+        <!-- ══════════ TAB 2/8: FAMILY MEMBERS ══════════ -->
+        <div class="wiz-pane" id="wiz-pane-2" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span style="font-size:13px;color:var(--text2)">Add all family members (sent inside <code>survey.family_members[]</code> on final submit)</span>
+            <button type="button" class="btn btn-success btn-sm" onclick="addWizardMemberRow()">➕ Add Member</button>
           </div>
-          <div class="form-row" style="margin:0">
-            <div class="form-group">
-              <label>Toilet <span>*</span></label>
-              <select class="form-control" id="hf-toilet">
-                <option value="yes">Yes - Private (yes)</option>
-                <option value="no">No (no)</option>
-                <option value="shared">Shared (shared)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Ration Card Type <span>*</span></label>
-              <select class="form-control" id="hf-ration-card">
-                <option value="bpl">BPL (bpl)</option>
-                <option value="apl">APL (apl)</option>
-                <option value="aay">AAY - Antyodaya (aay)</option>
-                <option value="none">None (none)</option>
-              </select>
-            </div>
+          <div id="wiz-members-container"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:14px">
+            <button type="button" class="btn btn-secondary" onclick="goToWizardStep(1)">← Previous</button>
+            <button type="button" class="btn btn-success" onclick="goToWizardStep(3)">Next: 03 Agriculture &amp; Water →</button>
           </div>
         </div>
 
-        <!-- Row 5: GPS Location & Remarks -->
-        <div class="form-row-3">
-          <div class="form-group">
-            <label>GPS Latitude</label>
-            <input class="form-control" id="hf-latitude" type="number" step="any" placeholder="12.971598"/>
+        <!-- ══════════ TAB 3/8: AGRICULTURE & WATER ══════════ -->
+        <div class="wiz-pane" id="wiz-pane-3" style="display:none">
+          <div class="form-row">
+            <div class="form-group"><label>Is anyone in the house retired from government / PSU service?</label>
+              <select class="form-control" id="hf-ret-has" onchange="syncFormToPayloadBox()"><option value="true">Yes</option><option value="false">No</option></select>
+            </div>
+            <div class="form-group"><label>Sector</label>
+              <select class="form-control" id="hf-ret-sector" onchange="syncFormToPayloadBox()"><option value="GOVERNMENT">GOVERNMENT</option><option value="PSU">PSU</option></select>
+            </div>
           </div>
-          <div class="form-group">
-            <label>GPS Longitude</label>
-            <input class="form-control" id="hf-longitude" type="number" step="any" placeholder="77.594566"/>
+          <div class="form-row">
+            <div class="form-group"><label>If yes, Department / Field</label><input class="form-control" id="hf-ret-dept" value="Education" oninput="syncFormToPayloadBox()"/></div>
+            <div class="form-group"><label>Designation</label><input class="form-control" id="hf-ret-desig" value="Teacher" oninput="syncFormToPayloadBox()"/></div>
           </div>
-          <div class="form-group">
-            <label>Remarks</label>
-            <input class="form-control" id="hf-remarks" placeholder="Any field observations..."/>
+          <div class="divider"></div>
+          <div class="form-row">
+            <div class="form-group"><label>Are you currently doing farming?</label>
+              <select class="form-control" id="hf-farm-curr" onchange="syncFormToPayloadBox()"><option value="true">Yes</option><option value="false">No</option></select>
+            </div>
+            <div class="form-group"><label>Are you interested in farming?</label>
+              <select class="form-control" id="hf-farm-int" onchange="syncFormToPayloadBox()"><option value="true">Yes</option><option value="false">No</option></select>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Current source of drinking water (<code>WELL, WATER_AUTHORITY, NEIGHBOUR_WELL, OTHER</code>)</label>
+              <input class="form-control" id="hf-water-sources" value="WELL, WATER_AUTHORITY, NEIGHBOUR_WELL, OTHER" oninput="syncFormToPayloadBox()"/>
+            </div>
+            <div class="form-group"><label>Specify other water source (if OTHER)</label>
+              <input class="form-control" id="hf-water-other" placeholder="Optional..." oninput="syncFormToPayloadBox()"/>
+            </div>
+          </div>
+          <div class="form-group"><label>Need a pipeline connection?</label>
+            <select class="form-control" id="hf-water-pipe" onchange="syncFormToPayloadBox()"><option value="true">Yes</option><option value="false">No</option></select>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:14px">
+            <button type="button" class="btn btn-secondary" onclick="goToWizardStep(2)">← Previous</button>
+            <button type="button" class="btn btn-success" onclick="goToWizardStep(4)">Next: 04 Waste Management →</button>
+          </div>
+        </div>
+
+        <!-- ══════════ TAB 4/8: WASTE MANAGEMENT ══════════ -->
+        <div class="wiz-pane" id="wiz-pane-4" style="display:none">
+          <div class="form-row">
+            <div class="form-group"><label>How do you manage organic waste?</label>
+              <select class="form-control" id="hf-waste-method" onchange="syncFormToPayloadBox()">
+                <option value="BIOGAS">Bio Gas (BIOGAS)</option>
+                <option value="RING_COMPOST">Ring Compost (RING_COMPOST)</option>
+                <option value="BIO_BIN">Bio Bin (BIO_BIN)</option>
+                <option value="OTHER">Others (OTHER)</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Specify other waste method (if OTHER)</label>
+              <input class="form-control" id="hf-waste-other" placeholder="Optional..." oninput="syncFormToPayloadBox()"/>
+            </div>
+          </div>
+          <div class="form-group"><label>Do you hand over non-biodegradable waste to Haritha Karma Sena?</label>
+            <select class="form-control" id="hf-hks" onchange="syncFormToPayloadBox()"><option value="true">Yes</option><option value="false">No</option></select>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Do you have solar installed at home?</label>
+              <select class="form-control" id="hf-solar" onchange="syncFormToPayloadBox()"><option value="true">Yes</option><option value="false">No</option></select>
+            </div>
+            <div class="form-group"><label>Interested in installing solar?</label>
+              <select class="form-control" id="hf-solar-int" onchange="syncFormToPayloadBox()"><option value="true">Yes</option><option value="false">No</option></select>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:14px">
+            <button type="button" class="btn btn-secondary" onclick="goToWizardStep(3)">← Previous</button>
+            <button type="button" class="btn btn-success" onclick="goToWizardStep(5)">Next: 05 Green Energy &amp; EV →</button>
+          </div>
+        </div>
+
+        <!-- ══════════ TAB 5/8: GREEN ENERGY & EV VEHICLES ══════════ -->
+        <div class="wiz-pane" id="wiz-pane-5" style="display:none">
+          <div class="form-row">
+            <div class="form-group"><label>Do you have an EV at home?</label>
+              <select class="form-control" id="hf-ev" onchange="syncFormToPayloadBox()"><option value="true">Yes</option><option value="false">No</option></select>
+            </div>
+            <div class="form-group"><label>EV Vehicle Types (<code>TWO_WHEELER, THREE_WHEELER, FOUR_WHEELER</code>)</label>
+              <input class="form-control" id="hf-ev-types" value="TWO_WHEELER, FOUR_WHEELER" oninput="syncFormToPayloadBox()"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Are you interested in EV?</label>
+              <select class="form-control" id="hf-ev-int" onchange="syncFormToPayloadBox()"><option value="false">No</option><option value="true">Yes</option></select>
+            </div>
+            <div class="form-group"><label>Any other green initiatives?</label>
+              <input class="form-control" id="hf-green-other" placeholder="Enter details..." oninput="syncFormToPayloadBox()"/>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:14px">
+            <button type="button" class="btn btn-secondary" onclick="goToWizardStep(4)">← Previous</button>
+            <button type="button" class="btn btn-success" onclick="goToWizardStep(6)">Next: 06 Health &amp; Accessibility →</button>
+          </div>
+        </div>
+
+        <!-- ══════════ TAB 6/8: HEALTH & ACCESSIBILITY ══════════ -->
+        <div class="wiz-pane" id="wiz-pane-6" style="display:none">
+          <div class="form-row">
+            <div class="form-group"><label>Are there differently abled persons in your house?</label>
+              <select class="form-control" id="hf-diff-abled" onchange="syncFormToPayloadBox()"><option value="false">No</option><option value="true">Yes</option></select>
+            </div>
+            <div class="form-group"><label>Are there bedridden patients?</label>
+              <select class="form-control" id="hf-bedridden" onchange="syncFormToPayloadBox()"><option value="false">No</option><option value="true">Yes</option></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Is your home a Haritha Bhavan?</label>
+              <select class="form-control" id="hf-is-hb" onchange="syncFormToPayloadBox()"><option value="false">No</option><option value="true">Yes</option></select>
+            </div>
+            <div class="form-group"><label>Do you want to include your home in Haritha Bhavan Scheme?</label>
+              <select class="form-control" id="hf-hb-scheme" onchange="syncFormToPayloadBox()"><option value="true">Yes</option><option value="false">No</option></select>
+            </div>
+          </div>
+          <div class="form-group"><label>Is anyone using Diaper?</label>
+            <select class="form-control" id="hf-diapers" onchange="syncFormToPayloadBox()"><option value="false">No</option><option value="true">Yes</option></select>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:14px">
+            <button type="button" class="btn btn-secondary" onclick="goToWizardStep(5)">← Previous</button>
+            <button type="button" class="btn btn-success" onclick="goToWizardStep(7)">Next: 07 Property &amp; Public Spaces →</button>
+          </div>
+        </div>
+
+        <!-- ══════════ TAB 7/8: PROPERTY & PUBLIC SPACES ══════════ -->
+        <div class="wiz-pane" id="wiz-pane-7" style="display:none">
+          <div class="form-row-3">
+            <div class="form-group"><label>Is there any vacant public land near your house?</label>
+              <select class="form-control" id="hf-has-pub-land" onchange="syncFormToPayloadBox()"><option value="true">Yes</option><option value="false">No</option></select>
+            </div>
+            <div class="form-group"><label>If yes, Public Land Location</label>
+              <input class="form-control" id="hf-pub-loc" value="Near community hall" oninput="syncFormToPayloadBox()"/>
+            </div>
+            <div class="form-group"><label>📸 Upload Public Land Photo</label>
+              <input type="file" class="form-control" id="hf-file-pub-land" accept="image/*"/>
+            </div>
+          </div>
+          <div class="form-group"><label>Public Land Photo URL (auto-replaced if file uploaded above)</label>
+            <input class="form-control" id="hf-pub-photo-url" value="https://example.com/public-land.jpg" oninput="syncFormToPayloadBox()"/>
+          </div>
+          <div class="divider"></div>
+          <div class="form-row-3">
+            <div class="form-group"><label>Is there a vacant house/land in your property/nearby?</label>
+              <select class="form-control" id="hf-has-vac-prop" onchange="syncFormToPayloadBox()"><option value="true">Yes</option><option value="false">No</option></select>
+            </div>
+            <div class="form-group"><label>If yes, Vacant Property Location</label>
+              <input class="form-control" id="hf-vac-loc" value="Near main road" oninput="syncFormToPayloadBox()"/>
+            </div>
+            <div class="form-group"><label>📸 Upload Vacant Property Photo</label>
+              <input type="file" class="form-control" id="hf-file-vac-prop" accept="image/*"/>
+            </div>
+          </div>
+          <div class="form-group"><label>Vacant Property Photo URL (auto-replaced if file uploaded above)</label>
+            <input class="form-control" id="hf-vac-photo-url" value="https://example.com/property.jpg" oninput="syncFormToPayloadBox()"/>
+          </div>
+          <div class="form-group"><label>Do people dump waste there?</label>
+            <select class="form-control" id="hf-waste-dumped" onchange="syncFormToPayloadBox()"><option value="false">No</option><option value="true">Yes</option></select>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:14px">
+            <button type="button" class="btn btn-secondary" onclick="goToWizardStep(6)">← Previous</button>
+            <button type="button" class="btn btn-success" onclick="goToWizardStep(8)">Next: 08 Animals &amp; Entrepreneurship →</button>
+          </div>
+        </div>
+
+        <!-- ══════════ TAB 8/8: ANIMALS & ENTREPRENEURSHIP + FINAL SUBMIT ══════════ -->
+        <div class="wiz-pane" id="wiz-pane-8" style="display:none">
+          <div class="form-group"><label>Do you have domestic animals?</label>
+            <select class="form-control" id="hf-has-animals" onchange="syncFormToPayloadBox()"><option value="true">Yes</option><option value="false">No</option></select>
+          </div>
+          <div class="form-row">
+            <div class="form-row" style="margin:0">
+              <div class="form-group"><label>🐔 Chicken Count</label><input class="form-control" id="hf-chicken" type="number" value="10" oninput="syncFormToPayloadBox()"/></div>
+              <div class="form-group"><label>🐄 Cow Count</label><input class="form-control" id="hf-cow" type="number" value="2" oninput="syncFormToPayloadBox()"/></div>
+            </div>
+            <div class="form-row" style="margin:0">
+              <div class="form-group"><label>🐐 Goat Count</label><input class="form-control" id="hf-goat" type="number" value="3" oninput="syncFormToPayloadBox()"/></div>
+              <div class="form-group"><label>🐃 Buffalo Count</label><input class="form-control" id="hf-buffalo" type="number" value="0" oninput="syncFormToPayloadBox()"/></div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="form-row-3">
+            <div class="form-group"><label>Do you have any business at home?</label>
+              <select class="form-control" id="hf-has-biz" onchange="syncFormToPayloadBox()"><option value="true">Yes</option><option value="false">No</option></select>
+            </div>
+            <div class="form-group"><label>Interested in starting a home business?</label>
+              <select class="form-control" id="hf-int-biz" onchange="syncFormToPayloadBox()"><option value="true">Yes</option><option value="false">No</option></select>
+            </div>
+            <div class="form-group"><label>If yes, Business Details</label>
+              <input class="form-control" id="hf-biz-details" value="Homemade food products" oninput="syncFormToPayloadBox()"/>
+            </div>
+          </div>
+          <div class="form-group"><label>Additional Feedback / Suggestions</label>
+            <textarea class="form-control" id="hf-suggestions" style="min-height:60px" oninput="syncFormToPayloadBox()">Need better waste collection facilities in our area.</textarea>
+          </div>
+
+          <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.35);border-radius:12px;padding:18px;text-align:center;margin-top:16px">
+            <div style="font-size:16px;font-weight:700;color:#34d399;margin-bottom:4px">✅ All 8 Sections Ready!</div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:14px">Clicking <strong>Submit Survey</strong> sends all 8 sections + family members + uploaded photos in ONE API call to <code>POST /api/survey/houses/</code>.</div>
+            <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
+              <button type="button" class="btn btn-secondary" onclick="goToWizardStep(7)">← Previous</button>
+              <button type="button" class="btn btn-success" style="padding:12px 28px;font-size:14px" onclick="submitHomeFormInteractive()">🚀 Submit Survey (All 8 Sections)</button>
+            </div>
           </div>
         </div>
 
         <div class="divider"></div>
 
-        <!-- Multi-Angle Photos Upload -->
+        <!-- Live JSON Payload Preview (Collapsible/Editable) -->
         <div class="form-group">
-          <label>📸 House Multiple Angle Photos (Front, Back, Left, Right, Roof, Interior)</label>
-          <div class="file-input-wrapper">
-            <input type="file" id="hf-photos-input" multiple accept="image/*" onchange="handleHomeFormPhotos(this)"/>
-            <div class="file-hint">Drop or <strong>click to select multiple angle photos</strong> (stored in <code>media/house_photos/&lt;house_id&gt;/</code>)</div>
-          </div>
-          <div id="hf-angle-cards" class="angle-photo-grid"></div>
+          <label>📦 Live Combined 8-Section JSON Payload (Sent on Step 8 Submit)</label>
+          <textarea class="form-control" id="hf-json-payload" style="min-height:220px;font-family:'JetBrains Mono',monospace;font-size:11.5px"></textarea>
         </div>
 
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px">
-          <button class="btn btn-primary" onclick="submitHomeFormInteractive()">📤 Submit Home Form via API</button>
-          <button class="btn btn-secondary" onclick="generateSampleCanvasPhotos()">🖼️ Generate 3 Test Angle Photos</button>
-          <div id="hf-next-step"></div>
-        </div>
-
+        <div id="hf-next-step"></div>
         <div id="hf-api-response"></div>
       </div>
     </div>
@@ -628,8 +807,8 @@
   <!-- ── FORM 2: FAMILY FORM (FIELD AGENT) ── -->
   <section class="section" id="family-form">
     <div class="section-header">
-      <h2>👨‍👩‍👧‍👦 Form 2: Family Form — Live API Tester</h2>
-      <p>Tests <code>POST /api/survey/houses/&lt;house_id&gt;/family/</code> (single member or bulk list) &amp; <code>GET /api/survey/houses/&lt;house_id&gt;/family/</code>.</p>
+      <h2>👨‍👩‍👧‍👦 Section 02: Family Members — Live API Tester</h2>
+      <p>Tests <code>POST /api/survey/houses/&lt;house_id&gt;/family/</code> &amp; <code>GET /api/survey/houses/&lt;house_id&gt;/family/</code> (<code>name</code>, <code>age</code>, <code>gender</code>, <code>education</code>, <code>occupation</code>, <code>blood_group</code>, <code>willing_to_donate_blood</code>).</p>
     </div>
 
     <div id="family-role-banner"></div>
@@ -639,11 +818,11 @@
         <span class="method-badge method-POST">POST</span>
         <div>
           <div class="endpoint-path">/api/survey/houses/&lt;house_id&gt;/family/</div>
-          <div class="card-title-text">Android Field Agent — Family Details Form (Single or Multiple Members)</div>
+          <div class="card-title-text">Haritha Kerala Survey — Add / Manage Family Members for a House</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button type="button" class="btn btn-secondary btn-sm" onclick="addFamilyRowUI()">➕ Add Member Row</button>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="fillSampleFamilyForm()">✨ Auto-Fill Sample Family (3)</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillSampleFamilyForm()">✨ Auto-Fill Sample Family (2)</button>
         </div>
       </div>
       <div class="card-body open">
@@ -670,7 +849,7 @@
         <div id="ff-members-container"></div>
 
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px">
-          <button class="btn btn-primary" onclick="submitFamilyFormInteractive()">📤 Submit Family Form via API</button>
+          <button class="btn btn-primary" onclick="submitFamilyFormInteractive()">📤 Submit Family Members via API</button>
           <button class="btn btn-secondary" onclick="addFamilyRowUI()">➕ Add Another Member</button>
           <button class="btn btn-secondary" onclick="loadExistingFamilyTable()">🔄 Fetch Saved Family List (GET)</button>
         </div>
@@ -953,99 +1132,26 @@
     </div>
     <div class="cards-grid">
 
-      <!-- Submit House -->
+      <!-- Submit House (Raw JSON or Quick Form) -->
       <div class="api-card" style="grid-column:1/-1">
         <div class="card-header open" onclick="toggleCard(this)">
           <span class="method-badge method-POST">POST</span>
           <div>
             <div class="endpoint-path">/api/survey/houses/</div>
-            <div class="card-title-text">Submit house survey with multiple angle photos</div>
+            <div class="card-title-text">Submit Haritha Kerala Household Survey (JSON payload)</div>
           </div>
           <span class="card-chevron">▼</span>
         </div>
         <div class="card-body open">
-          <div class="info-note">Field agent token required. Photos are stored inside the project at <strong>media/house_photos/&lt;house_id&gt;/</strong></div>
-          <div class="form-row">
-            <div class="form-group"><label>House Number <span>*</span></label><input class="form-control" id="hs-hno" placeholder="e.g. 12A"/></div>
-            <div class="form-group"><label>Ward No <span>*</span></label><input class="form-control" id="hs-ward" placeholder="e.g. Ward-05"/></div>
-          </div>
-          <div class="form-group"><label>Address <span>*</span></label><textarea class="form-control" id="hs-address" placeholder="Full address..."></textarea></div>
-          <div class="form-row">
-            <div class="form-group"><label>Landmark</label><input class="form-control" id="hs-landmark" placeholder="Near post office"/></div>
-            <div class="form-group"><label>Owner Name <span>*</span></label><input class="form-control" id="hs-owner" placeholder="Ramesh Gowda"/></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>Ownership <span>*</span></label>
-              <select class="form-control" id="hs-ownership">
-                <option value="own">Own</option><option value="rent">Rent</option>
-                <option value="lease">Lease</option><option value="others">Others</option>
-              </select>
-            </div>
-            <div class="form-group"><label>House Type <span>*</span></label>
-              <select class="form-control" id="hs-type">
-                <option value="permanent">Permanent</option>
-                <option value="semi_permanent">Semi-Permanent</option>
-                <option value="temporary">Temporary</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>Roof Type <span>*</span></label>
-              <select class="form-control" id="hs-roof">
-                <option value="rcc">RCC</option><option value="tiles">Tiles</option>
-                <option value="asbestos">Asbestos</option><option value="thatched">Thatched</option>
-                <option value="others">Others</option>
-              </select>
-            </div>
-            <div class="form-group"><label>Water Source <span>*</span></label>
-              <select class="form-control" id="hs-water">
-                <option value="tap">Tap Water</option><option value="well">Well</option>
-                <option value="borewell">Borewell</option><option value="river">River</option>
-                <option value="others">Others</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>Electricity <span>*</span></label>
-              <select class="form-control" id="hs-elec">
-                <option value="yes">Yes</option><option value="no">No</option><option value="solar">Solar</option>
-              </select>
-            </div>
-            <div class="form-group"><label>Toilet <span>*</span></label>
-              <select class="form-control" id="hs-toilet">
-                <option value="yes">Yes (Private)</option><option value="no">No</option><option value="shared">Shared</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>Ration Card <span>*</span></label>
-              <select class="form-control" id="hs-ration">
-                <option value="apl">APL</option><option value="bpl">BPL</option>
-                <option value="aay">AAY (Antyodaya)</option><option value="none">None</option>
-              </select>
-            </div>
-            <div class="form-group"><label>GPS Latitude</label><input class="form-control" id="hs-lat" placeholder="12.971598" type="number" step="any"/></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>GPS Longitude</label><input class="form-control" id="hs-lng" placeholder="77.594566" type="number" step="any"/></div>
-            <div class="form-group"><label>Remarks</label><input class="form-control" id="hs-remarks" placeholder="Optional remarks..."/></div>
-          </div>
-
-          <!-- Photo Upload -->
+          <div class="info-note">Field agent token required. You can also use the full 8-section interactive form under <strong>🏡 Home Form</strong> in the sidebar.</div>
           <div class="form-group">
-            <label>📸 House Photos (Multiple angles)</label>
-            <div class="file-input-wrapper" id="photoDropZone">
-              <input type="file" id="hs-photos" multiple accept="image/*" onchange="previewPhotos(this)"/>
-              <div class="file-hint">Drop photos here or <strong>click to browse</strong><br/>JPG, PNG, WEBP — multiple files allowed</div>
-              <div class="file-count" id="hs-photo-count"></div>
-            </div>
-            <div class="photo-previews" id="hs-previews"></div>
+            <label>Survey JSON Payload <span>*</span></label>
+            <textarea class="form-control" id="hs-raw-json" style="min-height:220px;font-family:'JetBrains Mono',monospace;font-size:11.5px"></textarea>
           </div>
-          <div class="form-group"><label>Captions (comma separated, one per photo)</label>
-            <input class="form-control" id="hs-captions" placeholder="Front view, Back view, Interior"/>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="submitHouse()">📤 Submit Survey JSON</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('hs-raw-json').value = JSON.stringify(getSampleSurveyPayload(), null, 2)">✨ Fill Sample JSON</button>
           </div>
-
-          <button class="btn btn-primary" onclick="submitHouse()">📤 Submit House Survey</button>
           <div id="hs-response"></div>
         </div>
       </div>
@@ -1228,33 +1334,32 @@
           <div class="form-group"><label>House ID <span>*</span></label><input class="form-control" id="fm-hid" placeholder="e.g. 1"/></div>
           <div class="divider"></div>
           <div class="form-row">
-            <div class="form-group"><label>Full Name <span>*</span></label><input class="form-control" id="fm-name" placeholder="Ramesh Gowda"/></div>
-            <div class="form-group"><label>Relationship <span>*</span></label>
-              <select class="form-control" id="fm-rel">
-                <option value="head">Head of Family</option><option value="spouse">Spouse</option>
-                <option value="son">Son</option><option value="daughter">Daughter</option>
-                <option value="father">Father</option><option value="mother">Mother</option>
-                <option value="others">Others</option>
-              </select>
-            </div>
+            <div class="form-group"><label>Member Name <span>*</span></label><input class="form-control" id="fm-name" value="Member Name 1"/></div>
+            <div class="form-group"><label>Age <span>*</span></label><input class="form-control" id="fm-age" type="number" value="48"/></div>
           </div>
           <div class="form-row">
             <div class="form-group"><label>Gender <span>*</span></label>
               <select class="form-control" id="fm-gender">
-                <option value="male">Male</option><option value="female">Female</option><option value="other">Other</option>
+                <option value="F">F (Female)</option><option value="M">M (Male)</option><option value="T">T (Transgender)</option>
               </select>
             </div>
-            <div class="form-group"><label>Date of Birth <span>*</span></label>
-              <input class="form-control" id="fm-dob" type="date"/>
+            <div class="form-group"><label>Blood Group</label>
+              <select class="form-control" id="fm-blood">
+                <option value="B+">B+</option><option value="O+">O+</option><option value="A+">A+</option>
+                <option value="AB+">AB+</option><option value="O-">O-</option><option value="A-">A-</option>
+                <option value="B-">B-</option><option value="AB-">AB-</option>
+              </select>
             </div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label>Age <span>*</span></label><input class="form-control" id="fm-age" type="number" placeholder="35"/></div>
-            <div class="form-group"><label>Phone</label><input class="form-control" id="fm-phone" placeholder="9876543210"/></div>
+            <div class="form-group"><label>Education</label><input class="form-control" id="fm-edu" value="SSLC"/></div>
+            <div class="form-group"><label>Occupation</label><input class="form-control" id="fm-occ" value="Homemaker"/></div>
           </div>
-          <div class="form-row">
-            <div class="form-group"><label>Education</label><input class="form-control" id="fm-edu" placeholder="10th Standard"/></div>
-            <div class="form-group"><label>Occupation</label><input class="form-control" id="fm-occ" placeholder="Farmer"/></div>
+          <div class="form-group"><label>Willing to Donate Blood?</label>
+            <select class="form-control" id="fm-donate">
+              <option value="false">No (false)</option>
+              <option value="true">Yes (true)</option>
+            </select>
           </div>
           <button class="btn btn-primary" onclick="addFamilyMember()">📤 Add Member</button>
           <div id="fm-response"></div>
@@ -1755,38 +1860,22 @@ async function deleteAgent() {
   if (r.ok || r.status === 204) toast('Agent deleted', 'info');
 }
 
-// Submit House Survey
+// Submit House Survey (from House Surveys tab)
 async function submitHouse() {
   const btn = getBtn(); setLoading(btn, true);
-  const fd = new FormData();
-  fd.append('house_number',    document.getElementById('hs-hno').value);
-  fd.append('ward_no',         document.getElementById('hs-ward').value);
-  fd.append('address',         document.getElementById('hs-address').value);
-  fd.append('landmark',        document.getElementById('hs-landmark').value);
-  fd.append('owner_name',      document.getElementById('hs-owner').value);
-  fd.append('ownership',       document.getElementById('hs-ownership').value);
-  fd.append('house_type',      document.getElementById('hs-type').value);
-  fd.append('roof_type',       document.getElementById('hs-roof').value);
-  fd.append('water_source',    document.getElementById('hs-water').value);
-  fd.append('electricity',     document.getElementById('hs-elec').value);
-  fd.append('toilet',          document.getElementById('hs-toilet').value);
-  fd.append('ration_card_type',document.getElementById('hs-ration').value);
-  const lat = document.getElementById('hs-lat').value;
-  const lng = document.getElementById('hs-lng').value;
-  if (lat) fd.append('latitude',  lat);
-  if (lng) fd.append('longitude', lng);
-  fd.append('remarks', document.getElementById('hs-remarks').value);
-
-  // Photos
-  const photos   = document.getElementById('hs-photos').files;
-  const captions = document.getElementById('hs-captions').value.split(',').map(c => c.trim()).filter(Boolean);
-  Array.from(photos).forEach(f => fd.append('photos', f));
-  captions.forEach(c => fd.append('captions', c));
-
-  const r = await apiCall('POST', '/api/survey/houses/', fd, true);
+  let body;
+  const raw = document.getElementById('hs-raw-json').value.trim();
+  try {
+    body = raw ? JSON.parse(raw) : getSampleSurveyPayload();
+  } catch (e) {
+    toast('Invalid JSON payload', 'error');
+    setLoading(btn, false);
+    return;
+  }
+  const r = await apiCall('POST', '/api/survey/houses/', body);
   setLoading(btn, false);
   renderResponse('hs-response', r);
-  if (r.ok) toast(`House survey submitted! ID: ${r.data.house?.id}`, 'success');
+  if (r.ok) toast(`House survey submitted! ID: ${r.data.id || r.data.house?.id}`, 'success');
 }
 
 // List Houses
@@ -1816,9 +1905,11 @@ async function updateHouse() {
     try { body = JSON.parse(raw); } catch(e) { toast('Invalid JSON', 'error'); setLoading(btn,false); return; }
   } else {
     const remarks = document.getElementById('hu-remarks').value;
-    const elec    = document.getElementById('hu-elec').value;
-    if (remarks) body.remarks     = remarks;
-    if (elec)    body.electricity = elec;
+    body = {
+      survey: {
+        additional_feedback: { suggestions: remarks || 'Updated via PATCH' }
+      }
+    };
   }
   const r = await apiCall('PATCH', `/api/survey/houses/${id}/`, body);
   setLoading(btn, false);
@@ -1873,19 +1964,18 @@ async function deletePhoto() {
   if (r.ok || r.status === 204) toast('Photo deleted', 'info');
 }
 
-// Add Family Member
+// Add Family Member (from Family tab)
 async function addFamilyMember() {
   const btn = getBtn(); setLoading(btn, true);
   const id = document.getElementById('fm-hid').value;
   const body = {
-    name:         document.getElementById('fm-name').value,
-    relationship: document.getElementById('fm-rel').value,
-    gender:       document.getElementById('fm-gender').value,
-    dob:          document.getElementById('fm-dob').value,
-    age:          parseInt(document.getElementById('fm-age').value),
-    phone:        document.getElementById('fm-phone').value,
-    education:    document.getElementById('fm-edu').value,
-    occupation:   document.getElementById('fm-occ').value,
+    name:                    document.getElementById('fm-name').value,
+    age:                     parseInt(document.getElementById('fm-age').value, 10),
+    gender:                  document.getElementById('fm-gender').value,
+    education:               document.getElementById('fm-edu').value,
+    occupation:              document.getElementById('fm-occ').value,
+    blood_group:             document.getElementById('fm-blood').value,
+    willing_to_donate_blood: document.getElementById('fm-donate').value === 'true',
   };
   const r = await apiCall('POST', `/api/survey/houses/${id}/family/`, body);
   setLoading(btn, false);
@@ -1945,10 +2035,117 @@ async function adminReport() {
 }
 
 // ═══════════════════════════════════════════
-//  ── INTERACTIVE HOME FORM & FAMILY FORM ──
+//  ── HARITHA KERALA 8-SECTION SURVEY & FAMILY FORM ──
 // ═══════════════════════════════════════════
-let homeFormFiles = []; // Array of { file, caption }
 let familyRowCounter = 0;
+
+function getSampleSurveyPayload() {
+  return {
+    survey: {
+      language: "en",
+      household_details: {
+        family_head_name: "Sanoop",
+        residence_name: "Green Villa",
+        residence_type: "OWNED",
+        house_name: "Puthen Veedu",
+        house_number: "123",
+        house_number_type: "NEW",
+        phone_number: "+919876543210",
+        blood_group: "O+",
+        age: 25,
+        gender: "M",
+        education: "Degree",
+        occupation: "Software Developer",
+        willing_to_donate_blood: true,
+        photo_url: "https://example.com/photo.jpg",
+        location: {
+          latitude: 11.123456,
+          longitude: 76.123456,
+          address: "Nilambur, Kerala, India"
+        }
+      },
+      family_members: [
+        {
+          name: "Member Name 1",
+          age: 48,
+          gender: "F",
+          education: "SSLC",
+          occupation: "Homemaker",
+          blood_group: "B+",
+          willing_to_donate_blood: false
+        },
+        {
+          name: "Member Name 2",
+          age: 20,
+          gender: "M",
+          education: "Degree",
+          occupation: "Student",
+          blood_group: "A+",
+          willing_to_donate_blood: true
+        }
+      ],
+      retired_government_employee: {
+        has_retired_employee: true,
+        department: "Education",
+        sector: "GOVERNMENT",
+        designation: "Teacher"
+      },
+      agriculture: {
+        currently_farming: true,
+        interested_in_farming: true
+      },
+      water_management: {
+        water_sources: ["WELL", "WATER_AUTHORITY", "NEIGHBOUR_WELL", "OTHER"],
+        other_water_source: null,
+        needs_pipeline_connection: true
+      },
+      waste_management: {
+        organic_waste_method: "BIOGAS",
+        other_method: null,
+        hands_over_non_organic_waste_to_haritha_karma_sena: true
+      },
+      green_energy: {
+        has_solar: true,
+        interested_in_installing_solar: true,
+        has_ev: true,
+        ev_vehicle_types: ["TWO_WHEELER", "FOUR_WHEELER"]
+      },
+      health_accessibility: {
+        has_differently_abled_person: false,
+        has_bedridden_patient: false,
+        is_haritha_bhavan: false,
+        interested_in_haritha_bhavan_scheme: true,
+        uses_diapers: false
+      },
+      property_and_public_spaces: {
+        has_vacant_public_land: true,
+        public_land_location: "Near community hall",
+        public_land_photo_url: "https://example.com/public-land.jpg",
+        has_vacant_house_or_land_nearby: true,
+        vacant_property_photo_url: "https://example.com/property.jpg",
+        vacant_property_location: "Near main road",
+        is_waste_dumped_in_vacant_land: false
+      },
+      domestic_animals: {
+        has_animals: true,
+        animals: {
+          chicken: 10,
+          cow: 2,
+          goat: 3,
+          buffalo: 0
+        }
+      },
+      entrepreneurship: {
+        has_existing_business: true,
+        interested_in_starting_home_business: true,
+        business_details: "Homemade food products"
+      },
+      additional_feedback: {
+        suggestions: "Need better waste collection facilities in our area."
+      }
+    }
+  };
+}
 
 function jumpToSection(id) {
   const navMap = {
@@ -2014,25 +2211,224 @@ async function switchToDefaultAgent() {
   }
 }
 
-// ── HOME FORM HELPERS ──
+let wizMemberCounter = 0;
+
+function goToWizardStep(step) {
+  const titles = {
+    1: 'Step 1 of 8 — Family & Personal Details',
+    2: 'Step 2 of 8 — Family Members',
+    3: 'Step 3 of 8 — Agriculture & Water',
+    4: 'Step 4 of 8 — Waste Management',
+    5: 'Step 5 of 8 — Green Energy & EV Vehicles',
+    6: 'Step 6 of 8 — Health & Accessibility',
+    7: 'Step 7 of 8 — Property & Public Spaces',
+    8: 'Step 8 of 8 — Animals & Entrepreneurship (Final Submit)',
+  };
+  for (let i = 1; i <= 8; i++) {
+    const pane = document.getElementById(`wiz-pane-${i}`);
+    const btn  = document.getElementById(`wiz-btn-${i}`);
+    if (pane) pane.style.display = (i === step) ? 'block' : 'none';
+    if (btn) {
+      btn.style.borderColor = (i === step) ? '#10b981' : 'var(--border)';
+      btn.style.color       = (i === step) ? '#34d399' : 'var(--text)';
+      btn.style.background  = (i === step) ? 'rgba(16,185,129,0.14)' : 'var(--glass)';
+    }
+  }
+  const pct = Math.round((step / 8) * 100);
+  document.getElementById('wiz-progress-label').textContent = titles[step];
+  document.getElementById('wiz-step-subtitle').textContent  = titles[step];
+  document.getElementById('wiz-progress-pct').textContent   = `${pct}%`;
+  document.getElementById('wiz-progress-bar').style.width   = `${pct}%`;
+  syncFormToPayloadBox();
+}
+
+function addWizardMemberRow(prefill = null) {
+  wizMemberCounter++;
+  const rid = wizMemberCounter;
+  const container = document.getElementById('wiz-members-container');
+  if (!container) return;
+  const d = prefill || { name: '', age: 25, gender: 'M', education: 'Degree', occupation: '', blood_group: 'O+', willing_to_donate_blood: false };
+  const div = document.createElement('div');
+  div.className = 'member-row-card';
+  div.id = `wiz-mem-${rid}`;
+  div.innerHTML = `
+    <div class="member-row-header">
+      <strong style="font-size:12.5px;color:#34d399">👤 ${container.children.length + 1}. Member Details</strong>
+      <button type="button" class="btn btn-danger btn-sm" style="padding:4px 10px;font-size:11px" onclick="removeWizardMemberRow('wiz-mem-${rid}')">🗑 Remove</button>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group"><label>Member Name <span>*</span></label><input class="form-control wm-name" value="${d.name}" placeholder="Enter name" oninput="syncFormToPayloadBox()"/></div>
+      <div class="form-group"><label>Age <span>*</span></label><input class="form-control wm-age" type="number" value="${d.age}" placeholder="Enter age" oninput="syncFormToPayloadBox()"/></div>
+      <div class="form-group"><label>Gender <span>*</span></label>
+        <select class="form-control wm-gender" onchange="syncFormToPayloadBox()">
+          <option value="F" ${d.gender==='F'?'selected':''}>F (Female)</option>
+          <option value="M" ${d.gender==='M'?'selected':''}>M (Male)</option>
+          <option value="T" ${d.gender==='T'?'selected':''}>T (Transgender)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-3">
+      <div class="form-group"><label>Education</label><input class="form-control wm-edu" value="${d.education}" placeholder="SSLC / Degree" oninput="syncFormToPayloadBox()"/></div>
+      <div class="form-group"><label>Occupation</label><input class="form-control wm-occ" value="${d.occupation}" placeholder="Occupation" oninput="syncFormToPayloadBox()"/></div>
+      <div class="form-group"><label>Blood Group <span>*</span></label>
+        <select class="form-control wm-blood" onchange="syncFormToPayloadBox()">
+          <option value="B+" ${d.blood_group==='B+'?'selected':''}>B+</option>
+          <option value="A+" ${d.blood_group==='A+'?'selected':''}>A+</option>
+          <option value="O+" ${d.blood_group==='O+'?'selected':''}>O+</option>
+          <option value="AB+" ${d.blood_group==='AB+'?'selected':''}>AB+</option>
+          <option value="O-" ${d.blood_group==='O-'?'selected':''}>O-</option>
+          <option value="A-" ${d.blood_group==='A-'?'selected':''}>A-</option>
+          <option value="B-" ${d.blood_group==='B-'?'selected':''}>B-</option>
+          <option value="AB-" ${d.blood_group==='AB-'?'selected':''}>AB-</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:0"><label>Blood Donation Interest?</label>
+      <select class="form-control wm-donate" onchange="syncFormToPayloadBox()">
+        <option value="false" ${!d.willing_to_donate_blood?'selected':''}>No (false)</option>
+        <option value="true" ${d.willing_to_donate_blood?'selected':''}>Yes (true)</option>
+      </select>
+    </div>`;
+  container.appendChild(div);
+  syncFormToPayloadBox();
+}
+
+function removeWizardMemberRow(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+  syncFormToPayloadBox();
+}
+
+function syncFormToPayloadBox() {
+  const base = getSampleSurveyPayload();
+  const s = base.survey;
+
+  // Section 1: household_details
+  s.household_details = {
+    family_head_name: document.getElementById('hf-head-name').value,
+    residence_name: document.getElementById('hf-res-name').value,
+    residence_type: document.getElementById('hf-res-type').value,
+    house_name: document.getElementById('hf-house-name').value,
+    house_number: document.getElementById('hf-house-number').value,
+    house_number_type: document.getElementById('hf-house-num-type').value,
+    phone_number: document.getElementById('hf-phone').value,
+    blood_group: document.getElementById('hf-blood').value,
+    age: parseInt(document.getElementById('hf-age').value || '0', 10),
+    gender: document.getElementById('hf-gender').value,
+    education: document.getElementById('hf-edu').value,
+    occupation: document.getElementById('hf-occ').value,
+    willing_to_donate_blood: document.getElementById('hf-donate').value === 'true',
+    photo_url: document.getElementById('hf-photo-url').value,
+    location: {
+      latitude: parseFloat(document.getElementById('hf-latitude').value || '0'),
+      longitude: parseFloat(document.getElementById('hf-longitude').value || '0'),
+      address: document.getElementById('hf-address').value,
+    }
+  };
+
+  // Section 2: family_members (from Tab 2 wizard cards)
+  const memCards = Array.from(document.querySelectorAll('#wiz-members-container .member-row-card'));
+  if (memCards.length) {
+    s.family_members = memCards.map(c => ({
+      name: c.querySelector('.wm-name').value.trim(),
+      age: parseInt(c.querySelector('.wm-age').value || '0', 10),
+      gender: c.querySelector('.wm-gender').value,
+      education: c.querySelector('.wm-edu').value.trim(),
+      occupation: c.querySelector('.wm-occ').value.trim(),
+      blood_group: c.querySelector('.wm-blood').value,
+      willing_to_donate_blood: c.querySelector('.wm-donate').value === 'true',
+    }));
+  }
+
+  // Section 3: retired_government_employee, agriculture, water_management
+  s.retired_government_employee = {
+    has_retired_employee: document.getElementById('hf-ret-has').value === 'true',
+    department: document.getElementById('hf-ret-dept').value,
+    sector: document.getElementById('hf-ret-sector')?.value || "GOVERNMENT",
+    designation: document.getElementById('hf-ret-desig').value,
+  };
+  s.agriculture = {
+    currently_farming: document.getElementById('hf-farm-curr').value === 'true',
+    interested_in_farming: document.getElementById('hf-farm-int').value === 'true',
+  };
+  s.water_management = {
+    water_sources: document.getElementById('hf-water-sources').value.split(',').map(x => x.trim()).filter(Boolean),
+    other_water_source: document.getElementById('hf-water-other')?.value || null,
+    needs_pipeline_connection: document.getElementById('hf-water-pipe').value === 'true',
+  };
+
+  // Section 4: waste_management
+  s.waste_management = {
+    organic_waste_method: document.getElementById('hf-waste-method').value,
+    other_method: document.getElementById('hf-waste-other')?.value || null,
+    hands_over_non_organic_waste_to_haritha_karma_sena: document.getElementById('hf-hks').value === 'true',
+  };
+
+  // Section 5: green_energy
+  s.green_energy = {
+    has_solar: document.getElementById('hf-solar').value === 'true',
+    interested_in_installing_solar: document.getElementById('hf-solar-int').value === 'true',
+    has_ev: document.getElementById('hf-ev').value === 'true',
+    ev_vehicle_types: document.getElementById('hf-ev-types').value.split(',').map(x => x.trim()).filter(Boolean),
+    interested_in_ev: document.getElementById('hf-ev-int')?.value === 'true',
+    other_green_initiatives: document.getElementById('hf-green-other')?.value || null,
+  };
+
+  // Section 6: health_accessibility
+  s.health_accessibility = {
+    has_differently_abled_person: document.getElementById('hf-diff-abled').value === 'true',
+    has_bedridden_patient: document.getElementById('hf-bedridden').value === 'true',
+    is_haritha_bhavan: document.getElementById('hf-is-hb')?.value === 'true',
+    interested_in_haritha_bhavan_scheme: document.getElementById('hf-hb-scheme').value === 'true',
+    uses_diapers: document.getElementById('hf-diapers')?.value === 'true',
+  };
+
+  // Section 7: property_and_public_spaces
+  s.property_and_public_spaces = {
+    has_vacant_public_land: document.getElementById('hf-has-pub-land')?.value !== 'false',
+    public_land_location: document.getElementById('hf-pub-loc').value,
+    public_land_photo_url: document.getElementById('hf-pub-photo-url')?.value || "https://example.com/public-land.jpg",
+    has_vacant_house_or_land_nearby: document.getElementById('hf-has-vac-prop')?.value !== 'false',
+    vacant_property_photo_url: document.getElementById('hf-vac-photo-url')?.value || "https://example.com/property.jpg",
+    vacant_property_location: document.getElementById('hf-vac-loc').value,
+    is_waste_dumped_in_vacant_land: document.getElementById('hf-waste-dumped')?.value === 'true',
+  };
+
+  // Section 8: domestic_animals, entrepreneurship, additional_feedback
+  s.domestic_animals = {
+    has_animals: document.getElementById('hf-has-animals')?.value !== 'false',
+    animals: {
+      chicken: parseInt(document.getElementById('hf-chicken').value || '0', 10),
+      cow: parseInt(document.getElementById('hf-cow').value || '0', 10),
+      goat: parseInt(document.getElementById('hf-goat').value || '0', 10),
+      buffalo: parseInt(document.getElementById('hf-buffalo').value || '0', 10),
+    }
+  };
+  s.entrepreneurship = {
+    has_existing_business: document.getElementById('hf-has-biz')?.value !== 'false',
+    interested_in_starting_home_business: document.getElementById('hf-int-biz')?.value !== 'false',
+    business_details: document.getElementById('hf-biz-details').value,
+  };
+  s.additional_feedback = {
+    suggestions: document.getElementById('hf-suggestions').value,
+  };
+
+  const box = document.getElementById('hf-json-payload');
+  if (box) box.value = JSON.stringify(base, null, 2);
+}
+
 function fillSampleHomeForm() {
-  const num = Math.floor(100 + Math.random() * 899);
-  document.getElementById('hf-house-number').value = `HN-${num}/A`;
-  document.getElementById('hf-ward-no').value      = 'Ward-05';
-  document.getElementById('hf-owner-name').value   = 'Ramesh Gowda';
-  document.getElementById('hf-address').value      = `${num}, 4th Cross, Gandhi Nagar, Ward 05`;
-  document.getElementById('hf-landmark').value     = 'Near Govt Higher Primary School';
-  document.getElementById('hf-ownership').value    = 'own';
-  document.getElementById('hf-house-type').value   = 'permanent';
-  document.getElementById('hf-roof-type').value    = 'rcc';
-  document.getElementById('hf-water-source').value = 'tap';
-  document.getElementById('hf-electricity').value  = 'yes';
-  document.getElementById('hf-toilet').value       = 'yes';
-  document.getElementById('hf-ration-card').value  = 'bpl';
-  document.getElementById('hf-latitude').value     = '12.971598';
-  document.getElementById('hf-longitude').value    = '77.594566';
-  document.getElementById('hf-remarks').value      = 'Two-storey residential house in good condition.';
-  toast('Sample Home Form data filled!', 'info');
+  const wCont = document.getElementById('wiz-members-container');
+  if (wCont) {
+    wCont.innerHTML = '';
+    addWizardMemberRow({ name: 'Member Name 1', age: 48, gender: 'F', education: 'SSLC', occupation: 'Homemaker', blood_group: 'B+', willing_to_donate_blood: false });
+    addWizardMemberRow({ name: 'Member Name 2', age: 20, gender: 'M', education: 'Degree', occupation: 'Student', blood_group: 'A+', willing_to_donate_blood: true });
+  }
+  syncFormToPayloadBox();
+  const sample = getSampleSurveyPayload();
+  const hsBox = document.getElementById('hs-raw-json');
+  if (hsBox) hsBox.value = JSON.stringify(sample, null, 2);
+  toast('All 8 tabs populated with sample data!', 'info');
 }
 
 function captureHomeGPS() {
@@ -2045,127 +2441,63 @@ function captureHomeGPS() {
     pos => {
       document.getElementById('hf-latitude').value  = pos.coords.latitude.toFixed(6);
       document.getElementById('hf-longitude').value = pos.coords.longitude.toFixed(6);
+      syncFormToPayloadBox();
       toast('GPS coordinates captured! 📍', 'success');
     },
-    err => {
-      document.getElementById('hf-latitude').value  = '12.971598';
-      document.getElementById('hf-longitude').value = '77.594566';
+    () => {
+      document.getElementById('hf-latitude').value  = '11.123456';
+      document.getElementById('hf-longitude').value = '76.123456';
+      syncFormToPayloadBox();
       toast('GPS permission denied — filled sample coordinates', 'info');
     }
   );
 }
 
-function handleHomeFormPhotos(input) {
-  const defaultAngles = ['Front View', 'Back View', 'Left Side', 'Right Side', 'Roof View', 'Interior'];
-  Array.from(input.files).forEach((file) => {
-    const caption = defaultAngles[homeFormFiles.length % defaultAngles.length];
-    homeFormFiles.push({ file, caption });
-  });
-  input.value = '';
-  renderHomeAngleCards();
-}
-
-function renderHomeAngleCards() {
-  const grid = document.getElementById('hf-angle-cards');
-  if (!grid) return;
-  if (!homeFormFiles.length) {
-    grid.innerHTML = '';
-    return;
-  }
-  const angles = ['Front View', 'Back View', 'Left Side', 'Right Side', 'Roof View', 'Interior'];
-  grid.innerHTML = homeFormFiles.map((item, idx) => {
-    const url = URL.createObjectURL(item.file);
-    const opts = angles.map(a => `<option value="${a}" ${item.caption === a ? 'selected' : ''}>${a}</option>`).join('');
-    return `
-      <div class="angle-photo-card">
-        <img src="${url}" alt="Angle ${idx + 1}"/>
-        <select class="form-control" style="padding:5px 8px;font-size:11.5px" onchange="homeFormFiles[${idx}].caption=this.value">
-          ${opts}
-        </select>
-        <input class="form-control" style="padding:5px 8px;font-size:11px" value="${item.caption}" placeholder="Custom angle caption" oninput="homeFormFiles[${idx}].caption=this.value"/>
-        <button type="button" class="btn btn-danger btn-sm" style="width:100%;justify-content:center;padding:4px" onclick="removeHomePhoto(${idx})">✕ Remove</button>
-      </div>`;
-  }).join('');
-}
-
-function removeHomePhoto(idx) {
-  homeFormFiles.splice(idx, 1);
-  renderHomeAngleCards();
-}
-
-function generateSampleCanvasPhotos() {
-  const samples = [
-    { label: 'Front View', bg1: '#1e3a8a', bg2: '#3b82f6' },
-    { label: 'Left Side',  bg1: '#065f46', bg2: '#10b981' },
-    { label: 'Back View',  bg1: '#581c87', bg2: '#8b5cf6' },
-  ];
-  homeFormFiles = [];
-  let done = 0;
-  samples.forEach((s, i) => {
-    const c = document.createElement('canvas');
-    c.width = 640; c.height = 420;
-    const ctx = c.getContext('2d');
-    const grad = ctx.createLinearGradient(0, 0, 640, 420);
-    grad.addColorStop(0, s.bg1); grad.addColorStop(1, s.bg2);
-    ctx.fillStyle = grad; ctx.fillRect(0, 0, 640, 420);
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
-    ctx.fillRect(170, 140, 300, 190);
-    ctx.beginPath(); ctx.moveTo(140, 140); ctx.lineTo(320, 60); ctx.lineTo(500, 140); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 28px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(`House ${s.label}`, 320, 240);
-    ctx.font = '16px monospace'; ctx.fillText(`Angle #${i + 1} • API Test Image`, 320, 275);
-    c.toBlob(blob => {
-      const file = new File([blob], `house_${s.label.toLowerCase().replace(/\s+/g,'_')}.png`, { type: 'image/png' });
-      homeFormFiles.push({ file, caption: s.label });
-      done++;
-      if (done === samples.length) {
-        renderHomeAngleCards();
-        toast('Generated 3 multi-angle test photos! 📸', 'success');
-      }
-    }, 'image/png');
-  });
-}
-
 async function submitHomeFormInteractive() {
   const btn = getBtn(); setLoading(btn, true);
-  const fd = new FormData();
-  fd.append('house_number',     document.getElementById('hf-house-number').value);
-  fd.append('ward_no',          document.getElementById('hf-ward-no').value);
-  fd.append('owner_name',       document.getElementById('hf-owner-name').value);
-  fd.append('address',          document.getElementById('hf-address').value);
-  fd.append('landmark',         document.getElementById('hf-landmark').value);
-  fd.append('ownership',        document.getElementById('hf-ownership').value);
-  fd.append('house_type',       document.getElementById('hf-house-type').value);
-  fd.append('roof_type',        document.getElementById('hf-roof-type').value);
-  fd.append('water_source',     document.getElementById('hf-water-source').value);
-  fd.append('electricity',      document.getElementById('hf-electricity').value);
-  fd.append('toilet',           document.getElementById('hf-toilet').value);
-  fd.append('ration_card_type', document.getElementById('hf-ration-card').value);
-  const lat = document.getElementById('hf-latitude').value;
-  const lng = document.getElementById('hf-longitude').value;
-  if (lat) fd.append('latitude', lat);
-  if (lng) fd.append('longitude', lng);
-  fd.append('remarks', document.getElementById('hf-remarks').value);
+  let payload;
+  try {
+    payload = JSON.parse(document.getElementById('hf-json-payload').value);
+  } catch (e) {
+    toast('Invalid JSON in payload box', 'error');
+    setLoading(btn, false);
+    return;
+  }
 
-  homeFormFiles.forEach(item => {
-    fd.append('photos', item.file);
-    fd.append('captions', item.caption || '');
-  });
+  // Check if any image files were selected in Tab 1 (house_photo) or Tab 7 (public_land_photo, vacant_property_photo)
+  const houseFile = document.getElementById('hf-file-house')?.files?.[0];
+  const pubFile   = document.getElementById('hf-file-pub-land')?.files?.[0];
+  const vacFile   = document.getElementById('hf-file-vac-prop')?.files?.[0];
 
-  const r = await apiCall('POST', '/api/survey/houses/', fd, true);
+  let r;
+  if (houseFile || pubFile || vacFile) {
+    // Send ONE single multipart/form-data request containing both the 8-section JSON and the image files
+    const fd = new FormData();
+    fd.append('survey', JSON.stringify(payload));
+    if (houseFile) fd.append('house_photo', houseFile);
+    if (pubFile)   fd.append('public_land_photo', pubFile);
+    if (vacFile)   fd.append('vacant_property_photo', vacFile);
+    r = await apiCall('POST', '/api/survey/houses/', fd, true);
+  } else {
+    // Send ONE single application/json request
+    r = await apiCall('POST', '/api/survey/houses/', payload);
+  }
+
   setLoading(btn, false);
   renderResponse('hf-api-response', r);
 
-  if (r.ok && r.data.house) {
-    const newId = r.data.house.id;
-    toast(`Home Form saved! House ID #${newId}`, 'success');
+  if (r.ok) {
+    const newId = r.data.id || r.data.house?.id;
+    toast(`All 8 Sections Submitted! Survey ID #${newId}`, 'success');
     document.getElementById('ff-house-id').value = newId;
     document.getElementById('hf-next-step').innerHTML = `
-      <button type="button" class="btn btn-success" onclick="jumpToSection('family-form');loadHousesForDropdown(${newId})">
-        ✅ House #${newId} Created — Fill Family Form →
-      </button>`;
+      <div style="margin-top:12px">
+        <button type="button" class="btn btn-success" onclick="jumpToSection('houses');listHouses()">
+          ✅ Survey #${newId} Saved — View Uploaded Surveys →
+        </button>
+      </div>`;
   } else {
-    toast('Home Form submission failed — check response below', 'error');
+    toast('Survey submission failed — check response below', 'error');
   }
 }
 
@@ -2179,7 +2511,7 @@ async function loadHousesForDropdown(selectedId = null) {
   if (r.ok && Array.isArray(r.data.houses)) {
     const currentVal = selectedId || document.getElementById('ff-house-id').value || (r.data.houses[0]?.id || '');
     sel.innerHTML = `<option value="">— Select House (${r.data.houses.length} available) —</option>` +
-      r.data.houses.map(h => `<option value="${h.id}" ${String(h.id) === String(currentVal) ? 'selected' : ''}>#${h.id} — House ${h.house_number} (${h.ward_no}) • ${h.owner_name}</option>`).join('');
+      r.data.houses.map(h => `<option value="${h.id}" ${String(h.id) === String(currentVal) ? 'selected' : ''}>#${h.id} — House ${h.house_number} (${h.house_name || h.residence_name}) • ${h.family_head_name}</option>`).join('');
     if (currentVal) {
       document.getElementById('ff-house-id').value = currentVal;
       loadExistingFamilyTable(currentVal);
@@ -2198,7 +2530,7 @@ function addFamilyRowUI(prefill = null) {
   familyRowCounter++;
   const rid = familyRowCounter;
   const container = document.getElementById('ff-members-container');
-  const d = prefill || { name: '', relationship: 'head', gender: 'male', dob: '', age: '', education: '', occupation: '', phone: '' };
+  const d = prefill || { name: '', age: '', gender: 'F', education: '', occupation: '', blood_group: 'O+', willing_to_donate_blood: false };
   const div = document.createElement('div');
   div.className = 'member-row-card';
   div.id = `ff-row-${rid}`;
@@ -2209,55 +2541,51 @@ function addFamilyRowUI(prefill = null) {
     </div>
     <div class="form-row-3">
       <div class="form-group">
-        <label>Full Name <span>*</span></label>
-        <input class="form-control ff-name" value="${d.name}" placeholder="e.g. Ramesh Gowda"/>
+        <label>Member Name <span>*</span></label>
+        <input class="form-control ff-name" value="${d.name}" placeholder="e.g. Member Name 1"/>
       </div>
       <div class="form-group">
-        <label>Relationship <span>*</span></label>
-        <select class="form-control ff-rel">
-          <option value="head" ${d.relationship==='head'?'selected':''}>Head of Family (head)</option>
-          <option value="spouse" ${d.relationship==='spouse'?'selected':''}>Spouse (spouse)</option>
-          <option value="son" ${d.relationship==='son'?'selected':''}>Son (son)</option>
-          <option value="daughter" ${d.relationship==='daughter'?'selected':''}>Daughter (daughter)</option>
-          <option value="father" ${d.relationship==='father'?'selected':''}>Father (father)</option>
-          <option value="mother" ${d.relationship==='mother'?'selected':''}>Mother (mother)</option>
-          <option value="others" ${d.relationship==='others'?'selected':''}>Others (others)</option>
-        </select>
+        <label>Age <span>*</span></label>
+        <input class="form-control ff-age" type="number" value="${d.age}" placeholder="48"/>
       </div>
       <div class="form-group">
         <label>Gender <span>*</span></label>
         <select class="form-control ff-gender">
-          <option value="male" ${d.gender==='male'?'selected':''}>Male (male)</option>
-          <option value="female" ${d.gender==='female'?'selected':''}>Female (female)</option>
-          <option value="other" ${d.gender==='other'?'selected':''}>Other (other)</option>
+          <option value="F" ${d.gender==='F'?'selected':''}>F (Female)</option>
+          <option value="M" ${d.gender==='M'?'selected':''}>M (Male)</option>
+          <option value="T" ${d.gender==='T'?'selected':''}>T (Transgender)</option>
         </select>
       </div>
     </div>
-    <div class="form-row">
-      <div class="form-row" style="margin:0">
-        <div class="form-group">
-          <label>Date of Birth (DOB) <span>*</span></label>
-          <input class="form-control ff-dob" type="date" value="${d.dob}" onchange="calcAgeForRow(this)"/>
-        </div>
-        <div class="form-group">
-          <label>Age <span>*</span></label>
-          <input class="form-control ff-age" type="number" value="${d.age}" placeholder="38"/>
-        </div>
+    <div class="form-row-3">
+      <div class="form-group">
+        <label>Education</label>
+        <input class="form-control ff-edu" value="${d.education}" placeholder="e.g. SSLC / Degree"/>
       </div>
-      <div class="form-row" style="margin:0">
-        <div class="form-group">
-          <label>Education</label>
-          <input class="form-control ff-edu" value="${d.education}" placeholder="e.g. Graduate / PUC"/>
-        </div>
-        <div class="form-group">
-          <label>Occupation</label>
-          <input class="form-control ff-occ" value="${d.occupation}" placeholder="e.g. Farmer / Teacher"/>
-        </div>
+      <div class="form-group">
+        <label>Occupation</label>
+        <input class="form-control ff-occ" value="${d.occupation}" placeholder="e.g. Homemaker / Student"/>
+      </div>
+      <div class="form-group">
+        <label>Blood Group</label>
+        <select class="form-control ff-blood">
+          <option value="B+" ${d.blood_group==='B+'?'selected':''}>B+</option>
+          <option value="A+" ${d.blood_group==='A+'?'selected':''}>A+</option>
+          <option value="O+" ${d.blood_group==='O+'?'selected':''}>O+</option>
+          <option value="AB+" ${d.blood_group==='AB+'?'selected':''}>AB+</option>
+          <option value="O-" ${d.blood_group==='O-'?'selected':''}>O-</option>
+          <option value="A-" ${d.blood_group==='A-'?'selected':''}>A-</option>
+          <option value="B-" ${d.blood_group==='B-'?'selected':''}>B-</option>
+          <option value="AB-" ${d.blood_group==='AB-'?'selected':''}>AB-</option>
+        </select>
       </div>
     </div>
     <div class="form-group" style="margin-bottom:0">
-      <label>Phone Number</label>
-      <input class="form-control ff-phone" value="${d.phone}" placeholder="9876543210"/>
+      <label>Willing to Donate Blood?</label>
+      <select class="form-control ff-donate">
+        <option value="false" ${!d.willing_to_donate_blood?'selected':''}>No (false)</option>
+        <option value="true" ${d.willing_to_donate_blood?'selected':''}>Yes (true)</option>
+      </select>
     </div>`;
   container.appendChild(div);
 }
@@ -2272,26 +2600,14 @@ function removeFamilyRowUI(rowId) {
   if (el) el.remove();
 }
 
-function calcAgeForRow(dobInput) {
-  if (!dobInput.value) return;
-  const dob = new Date(dobInput.value);
-  const now = new Date();
-  let age = now.getFullYear() - dob.getFullYear();
-  const m = now.getMonth() - dob.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
-  const card = dobInput.closest('.member-row-card');
-  if (card && age >= 0) card.querySelector('.ff-age').value = age;
-}
-
 function fillSampleFamilyForm() {
   const container = document.getElementById('ff-members-container');
   container.innerHTML = '';
   [
-    { name: 'Ramesh Gowda',  relationship: 'head',   gender: 'male',   dob: '1982-05-14', age: 44, education: 'PUC / 12th', occupation: 'Agriculture', phone: '9876543210' },
-    { name: 'Savitha Gowda', relationship: 'spouse', gender: 'female', dob: '1986-08-22', age: 40, education: 'B.A.',       occupation: 'Tailor',      phone: '9876543211' },
-    { name: 'Kiran Gowda',   relationship: 'son',    gender: 'male',   dob: '2008-11-10', age: 17, education: '11th Std',   occupation: 'Student',     phone: '' },
+    { name: 'Member Name 1', age: 48, gender: 'F', education: 'SSLC',   occupation: 'Homemaker', blood_group: 'B+', willing_to_donate_blood: false },
+    { name: 'Member Name 2', age: 20, gender: 'M', education: 'Degree', occupation: 'Student',   blood_group: 'A+', willing_to_donate_blood: true },
   ].forEach(m => addFamilyRowUI(m));
-  toast('Filled 3 sample family members (tests bulk API)!', 'info');
+  toast('Filled 2 sample family members!', 'info');
 }
 
 async function submitFamilyFormInteractive() {
@@ -2302,17 +2618,15 @@ async function submitFamilyFormInteractive() {
   }
   const cards = Array.from(document.querySelectorAll('#ff-members-container .member-row-card'));
   const members = cards.map(card => ({
-    name:         card.querySelector('.ff-name').value.trim(),
-    relationship: card.querySelector('.ff-rel').value,
-    gender:       card.querySelector('.ff-gender').value,
-    dob:          card.querySelector('.ff-dob').value,
-    age:          parseInt(card.querySelector('.ff-age').value, 10),
-    education:    card.querySelector('.ff-edu').value.trim(),
-    occupation:   card.querySelector('.ff-occ').value.trim(),
-    phone:        card.querySelector('.ff-phone').value.trim(),
+    name:                    card.querySelector('.ff-name').value.trim(),
+    age:                     parseInt(card.querySelector('.ff-age').value, 10),
+    gender:                  card.querySelector('.ff-gender').value,
+    education:               card.querySelector('.ff-edu').value.trim(),
+    occupation:              card.querySelector('.ff-occ').value.trim(),
+    blood_group:             card.querySelector('.ff-blood').value,
+    willing_to_donate_blood: card.querySelector('.ff-donate').value === 'true',
   }));
 
-  // Send single object if 1 row, or JSON array if multiple rows (tests both Android modes)
   const payload = members.length === 1 ? members[0] : members;
   const btn = getBtn(); setLoading(btn, true);
   const r = await apiCall('POST', `/api/survey/houses/${houseId}/family/`, payload);
@@ -2345,11 +2659,10 @@ async function loadExistingFamilyTable(explicitHouseId = null) {
     <tr>
       <td>#${m.id}</td>
       <td><strong>${m.name}</strong></td>
-      <td>${m.relationship_display || m.relationship}</td>
-      <td>${m.gender_display || m.gender}</td>
-      <td>${m.dob} (${m.age} yrs)</td>
+      <td>${m.age} yrs (${m.gender})</td>
+      <td>${m.blood_group || '—'}</td>
+      <td>${m.willing_to_donate_blood ? '✅ Yes' : 'No'}</td>
       <td>${m.education || '—'} / ${m.occupation || '—'}</td>
-      <td>${m.phone || '—'}</td>
       <td><button type="button" class="btn btn-danger btn-sm" style="padding:3px 9px;font-size:11px" onclick="deleteSavedMemberRow(${m.id}, ${houseId})">🗑 Delete</button></td>
     </tr>`).join('');
   wrap.innerHTML = `
@@ -2357,7 +2670,7 @@ async function loadExistingFamilyTable(explicitHouseId = null) {
       <div style="font-size:12px;font-weight:700;color:var(--accent2)">👨‍👩‍👧‍👦 Saved Family Members for House #${houseId} (${list.length}) — via <code>GET /api/survey/houses/${houseId}/family/</code></div>
       <div style="overflow-x:auto">
         <table class="data-table">
-          <thead><tr><th>ID</th><th>Name</th><th>Relation</th><th>Gender</th><th>DOB &amp; Age</th><th>Edu / Occupation</th><th>Phone</th><th>Action</th></tr></thead>
+          <thead><tr><th>ID</th><th>Name</th><th>Age &amp; Gender</th><th>Blood Group</th><th>Donate Blood</th><th>Edu / Occupation</th><th>Action</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
@@ -2375,7 +2688,11 @@ async function deleteSavedMemberRow(memberId, houseId) {
   }
 }
 
-// Initialize 1 blank row in Family Form + role banners on load
+// Initialize 2 default members in Tab 2/8 wizard + sync JSON payload on startup
+addWizardMemberRow({ name: 'Member Name 1', age: 48, gender: 'F', education: 'SSLC', occupation: 'Homemaker', blood_group: 'B+', willing_to_donate_blood: false });
+addWizardMemberRow({ name: 'Member Name 2', age: 20, gender: 'M', education: 'Degree', occupation: 'Student', blood_group: 'A+', willing_to_donate_blood: true });
+syncFormToPayloadBox();
+document.getElementById('hs-raw-json').value = JSON.stringify(getSampleSurveyPayload(), null, 2);
 addFamilyRowUI();
 renderRoleBanners();
 </script>

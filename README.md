@@ -1,181 +1,104 @@
-# Ward House Survey — Django REST API & Android Integration Guide
+# Haritha Kerala Household Survey — Postman & Android API Guide
 
-Backend REST API and built-in Web API Testing Dashboard for the **Ward House Survey Android Application**, built with **Django**, **Django REST Framework (DRF)**, and **SQLite**.
-
-Supports **Admin** and **Field Agent** roles with Token Authentication, multi-angle house photo storage inside the project (`media/house_photos/<house_id>/`), **Form 1: Home Survey Form**, and **Form 2: Family Member Form**.
+Complete backend REST API documentation for the **Haritha Kerala Household Survey** application (Django + Django REST Framework + SQLite), with step-by-step **Postman instructions**, **example request values**, and **exact JSON responses** for every API.
 
 ---
 
 ## Table of Contents
 
-1. [Quick Start (Anaconda)](#1-quick-start-anaconda)
-2. [Default Test Credentials & URLs](#2-default-test-credentials--urls)
-3. [Android App Connection Setup](#3-android-app-connection-setup)
-4. [Authentication & Headers](#4-authentication--headers)
-5. [Role Permissions Matrix](#5-role-permissions-matrix)
-6. [Complete API Reference (25 Endpoints)](#6-complete-api-reference-25-endpoints)
-   - [6.1 Admin Authentication](#61-admin-authentication)
-   - [6.2 Field Agent Authentication](#62-field-agent-authentication)
-   - [6.3 Logout & User Profile](#63-logout--user-profile)
-   - [6.4 Field Agent Management (Admin Only)](#64-field-agent-management-admin-only)
-   - [6.5 Form 1 — Home Survey API](#65-form-1--home-survey-api)
-   - [6.6 House Multiple-Angle Photos API](#66-house-multiple-angle-photos-api)
-   - [6.7 Form 2 — Family Members API](#67-form-2--family-members-api)
-   - [6.8 Admin Full Survey Report API](#68-admin-full-survey-report-api)
-7. [Dropdown / Choice Field Values](#7-dropdown--choice-field-values)
-8. [Error Response Formats](#8-error-response-formats)
-9. [Android Retrofit + OkHttp Code Examples (Kotlin)](#9-android-retrofit--okhttp-code-examples-kotlin)
-10. [Project Structure](#10-project-structure)
+1. [Server Setup & Base URLs](#1-server-setup--base-urls)
+2. [How to Configure Postman (Important)](#2-how-to-configure-postman-important)
+3. [Authentication APIs (Postman Examples & Responses)](#3-authentication-apis-postman-examples--responses)
+   - [3.1 Register Admin](#31-register-admin)
+   - [3.2 Admin Login](#32-admin-login)
+   - [3.3 Register Field Agent (Admin Only)](#33-register-field-agent-admin-only)
+   - [3.4 Field Agent Login](#34-field-agent-login)
+   - [3.5 Logout](#35-logout)
+   - [3.6 View & Update My Profile](#36-view--update-my-profile)
+4. [Field Agent Management APIs (Admin Only)](#4-field-agent-management-apis-admin-only)
+   - [4.1 List All Field Agents](#41-list-all-field-agents)
+   - [4.2 Get Single Field Agent Detail](#42-get-single-field-agent-detail)
+   - [4.3 Activate / Deactivate Field Agent (Force Logout)](#43-activate--deactivate-field-agent-force-logout)
+   - [4.4 Delete Field Agent](#44-delete-field-agent)
+5. [8-Section Haritha Kerala Survey API (Single Submit)](#5-8-section-haritha-kerala-survey-api-single-submit)
+   - [5.1 Method A — Submit in Postman as Raw JSON (with URL or Base64 Image)](#51-method-a--submit-in-postman-as-raw-json-with-url-or-base64-image)
+   - [5.2 Method B — Submit in Postman as `form-data` (JSON + Image Files in One Call)](#52-method-b--submit-in-postman-as-form-data-json--image-files-in-one-call)
+   - [5.3 Method C — Upload Photo Standalone (`POST /api/survey/upload-photo/`)](#53-method-c--upload-photo-standalone-post-apisurveyupload-photo)
+6. [List, View, Update & Delete Survey APIs](#6-list-view-update--delete-survey-apis)
+   - [6.1 List Surveys (Admin = All, Field Agent = Own Only)](#61-list-surveys-admin--all-field-agent--own-only)
+   - [6.2 Get Single Survey Detail](#62-get-single-survey-detail)
+   - [6.3 Update Survey (Field Agent Only)](#63-update-survey-field-agent-only)
+   - [6.4 Delete Survey (Admin Only)](#64-delete-survey-admin-only)
+7. [Family Members APIs](#7-family-members-apis)
+8. [House Photos APIs](#8-house-photos-apis)
+9. [Admin Full Report API](#9-admin-full-report-api)
+10. [Common Error Responses](#10-common-error-responses)
 
 ---
 
-## 1. Quick Start (Anaconda)
+## 1. Server Setup & Base URLs
 
-Open **Anaconda Prompt** (or PowerShell) in `d:\Espiritron\ward_house_servey`:
-
+### Run Locally (Anaconda Prompt)
 ```powershell
-# 1. Install dependencies (first time only)
-C:\ProgramData\Anaconda3\python.exe -m pip install -r requirements.txt
-
-# 2. Run database migrations (first time only)
 C:\ProgramData\Anaconda3\python.exe manage.py migrate
-
-# 3. Start server on 0.0.0.0:8000 (reachable by Browser + Android App on Wi-Fi)
 C:\ProgramData\Anaconda3\python.exe manage.py runserver 0.0.0.0:8000
 ```
 
-> **Important for Physical Android Devices:** Always run with `0.0.0.0:8000` (not just `runserver`) so phones on the same Wi-Fi network can reach your PC.
+### Base URLs
+
+| Environment | Base URL |
+|-------------|----------|
+| **Local PC / Postman** | `http://127.0.0.1:8000` |
+| **Render Cloud Deployment** | `https://ward-house-survey.onrender.com` |
+| **Android Emulator** | `http://10.0.2.2:8000` |
+| **Web Testing Dashboard** | `http://127.0.0.1:8000/dashboard/` (or `https://ward-house-survey.onrender.com/dashboard/`) |
+
+*(In all Postman examples below, you can use either `http://127.0.0.1:8000` or `https://ward-house-survey.onrender.com` as `<BASE_URL>`.)*
+
+### Pre-Created Test Accounts
+
+| Role | Username | Password |
+|------|----------|----------|
+| **Admin** | `admin` | `Admin@1234` |
+| **Field Agent** | `agent01` | `Agent@1234` |
 
 ---
 
-## 2. Default Test Credentials & URLs
+## 2. How to Configure Postman (Important)
 
-| Interface | URL | Notes |
-|-----------|-----|-------|
-| **Web API Testing Dashboard** | `http://127.0.0.1:8000/` or `http://127.0.0.1:8000/dashboard/` | Calls the exact same REST APIs via `fetch()` — includes Home Form & Family Form testers |
-| **Django Admin Panel** | `http://127.0.0.1:8000/admin/` | Database inspection |
-| **API Base URL (Browser/PC)** | `http://127.0.0.1:8000/api/` | Local testing |
-| **API Base URL (Android Emulator)** | `http://10.0.2.2:8000/api/` | Maps to host PC `127.0.0.1` |
-| **API Base URL (Real Android Phone)** | `http://<YOUR_PC_WIFI_IP>:8000/api/` | Find PC IP via `ipconfig` (e.g., `http://192.168.1.10:8000/api/`) |
+### Rule 1: How to Pass the Auth Token in Postman
+Django REST Framework uses `Token <your_token>` (NOT `Bearer <your_token>`).
+In Postman, for any protected API:
+1. Click the **Authorization** tab -> select **No Auth**.
+2. Click the **Headers** tab and add:
 
-### Pre-configured Accounts
+| Key | Value |
+|-----|-------|
+| `Authorization` | `Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b` |
 
-| Role | Username | Password | Login Endpoint |
-|------|----------|----------|----------------|
-| **Admin** | `admin` | `Admin@1234` | `POST /api/auth/admin/login/` |
-| **Field Agent** | `agent01` | `Agent@1234` | `POST /api/auth/agent/login/` |
+> **Warning:** On **Public** endpoints (`admin/login/`, `admin/register/`, `agent/login/`), **uncheck** or remove the `Authorization` header in Postman so an old/expired token is not sent.
 
----
+### Rule 2: How to Send JSON in Postman
+1. Go to the **Body** tab.
+2. Select **raw**.
+3. Change the dropdown on the right from `Text` to **JSON**.
+4. Paste the JSON payload and click **Send**.
 
-## 3. Android App Connection Setup
-
-### Step 1: Permissions & Cleartext HTTP in `AndroidManifest.xml`
-During local HTTP development (non-HTTPS), enable `usesCleartextTraffic` and permissions:
-
-```xml
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-<uses-permission android:name="android.permission.CAMERA" />
-
-<application
-    android:usesCleartextTraffic="true"
-    ... >
-</application>
-```
-
-### Step 2: Recommended Android Screen Flow
-1. **Login Screen** → Choose **Admin Login** (`POST /api/auth/admin/login/`) or **Field Agent Login** (`POST /api/auth/agent/login/`).
-2. Save `token` and `user.role` in `SharedPreferences` / `DataStore`.
-3. **If `role == "field_agent"`:**
-   - **My Uploaded Houses** → `GET /api/survey/houses/` (returns only this agent's houses).
-   - **Form 1 (Home Form)** → `POST /api/survey/houses/` (`multipart/form-data` with text fields + multiple `photos` + `captions`). Extract `response.house.id`.
-   - **Form 2 (Family Form)** → `POST /api/survey/houses/<house_id>/family/` (`application/json` — send a single member object or an array `[...]` of all family members).
-4. **If `role == "admin"`:**
-   - **Manage Field Agents** → `GET /api/auth/agents/`, `POST /api/auth/agent/register/`, `PATCH /api/auth/agents/<id>/toggle-active/`, `DELETE /api/auth/agents/<id>/`.
-   - **View All Uploaded Houses** → `GET /api/survey/houses/` or `GET /api/survey/admin/report/`.
+### Rule 3: How to Send Image Files (`form-data`) in Postman
+1. Go to the **Body** tab.
+2. Select **form-data**.
+3. Hover over the **Key** column, change the right-side dropdown from `Text` to **File**, and click **Select Files** to pick an image from your computer.
 
 ---
 
-## 4. Authentication & Headers
+## 3. Authentication APIs (Postman Examples & Responses)
 
-- **Public Endpoints (Do NOT send `Authorization` header):**
-  - `POST /api/auth/admin/register/`
-  - `POST /api/auth/admin/login/`
-  - `POST /api/auth/agent/login/`
-  > **Note:** Do **not** attach an old/expired `Authorization` header to login/register requests; DRF validates any `Authorization` header before checking `AllowAny` and will return `401 Invalid token` if a stale token is sent.
-
-- **Protected Endpoints (Required Header):**
-  ```http
-  Authorization: Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b
-  ```
-  *(Note the literal word `Token` followed by a single space and the token string — NOT `Bearer`.)*
-
----
-
-## 5. Role Permissions Matrix
-
-| Feature / Endpoint | Admin | Field Agent |
-|--------------------|:-----:|:-----------:|
-| Register Admin (`POST /api/auth/admin/register/`) | Public | Public |
-| Register Field Agent (`POST /api/auth/agent/register/`) | ✅ | ❌ (`403`) |
-| List / View Field Agents (`GET /api/auth/agents/`) | ✅ | ❌ (`403`) |
-| Activate / Deactivate Agent (`PATCH .../toggle-active/`) | ✅ | ❌ (`403`) |
-| Delete Field Agent (`DELETE /api/auth/agents/<id>/`) | ✅ | ❌ (`403`) |
-| Submit Home Form (`POST /api/survey/houses/`) | ❌ (`403`) | ✅ |
-| List Houses (`GET /api/survey/houses/`) | ✅ **Sees ALL** | ✅ **Sees OWN only** |
-| View House Detail (`GET /api/survey/houses/<id>/`) | ✅ **Any house** | ✅ **Own house only** |
-| Edit House (`PATCH /api/survey/houses/<id>/`) | ❌ (`403`) | ✅ **Own house only** |
-| Delete House (`DELETE /api/survey/houses/<id>/`) | ✅ **Any house** | ❌ (`403`) |
-| Upload Extra House Photos (`POST /api/survey/houses/<id>/photos/`) | ❌ (`403`) | ✅ **Own house only** |
-| Delete Single Photo (`DELETE /api/survey/photos/<photo_id>/`) | ✅ **Any photo** | ✅ **Own house only** |
-| Submit Family Form (`POST /api/survey/houses/<id>/family/`) | ❌ (`403`) | ✅ **Own house only** |
-| Edit Family Member (`PATCH /api/survey/family/<member_id>/`) | ❌ (`403`) | ✅ **Own house only** |
-| Delete Family Member (`DELETE /api/survey/family/<member_id>/`) | ✅ **Any member** | ✅ **Own house only** |
-| Full Admin Report (`GET /api/survey/admin/report/`) | ✅ | ❌ (`403`) |
-
----
-
-## 6. Complete API Reference (25 Endpoints)
-
-### Summary Table
-
-| # | Method | Endpoint | Auth | Content-Type | Purpose |
-|---|--------|----------|------|--------------|---------|
-| 1 | `POST` | `/api/auth/admin/register/` | Public | `application/json` | Register new Admin |
-| 2 | `POST` | `/api/auth/admin/login/` | Public | `application/json` | Admin login |
-| 3 | `POST` | `/api/auth/agent/register/` | Admin | `application/json` | Admin creates Field Agent |
-| 4 | `POST` | `/api/auth/agent/login/` | Public | `application/json` | Field Agent login |
-| 5 | `POST` | `/api/auth/logout/` | Any Token | `application/json` | Logout (deletes token) |
-| 6 | `GET` | `/api/auth/profile/` | Any Token | — | Get logged-in user profile |
-| 7 | `PATCH` | `/api/auth/profile/` | Any Token | `application/json` | Update logged-in user profile |
-| 8 | `GET` | `/api/auth/agents/` | Admin | — | List all Field Agents + house counts |
-| 9 | `GET` | `/api/auth/agents/<id>/` | Admin | — | Single Field Agent detail |
-| 10 | `PATCH` | `/api/auth/agents/<id>/toggle-active/` | Admin | `application/json` | Activate / Deactivate agent (force logout) |
-| 11 | `DELETE` | `/api/auth/agents/<id>/` | Admin | — | Permanently delete Field Agent |
-| 12 | `POST` | `/api/survey/houses/` | Agent | `multipart/form-data` | **Form 1:** Submit Home Form + angle photos |
-| 13 | `GET` | `/api/survey/houses/` | Any Token | — | List houses (Admin=all, Agent=own) |
-| 14 | `GET` | `/api/survey/houses/<id>/` | Any Token | — | Full house detail + photos + family |
-| 15 | `PATCH` | `/api/survey/houses/<id>/` | Agent | `application/json` | Update own house survey |
-| 16 | `DELETE` | `/api/survey/houses/<id>/` | Admin | — | Delete house survey |
-| 17 | `POST` | `/api/survey/houses/<id>/photos/` | Agent | `multipart/form-data` | Upload additional angle photos |
-| 18 | `GET` | `/api/survey/houses/<id>/photos/` | Any Token | — | List all photos of a house |
-| 19 | `DELETE` | `/api/survey/photos/<photo_id>/` | Any Token | — | Delete single photo (removes file on disk) |
-| 20 | `POST` | `/api/survey/houses/<id>/family/` | Agent | `application/json` | **Form 2:** Add single or bulk family members |
-| 21 | `GET` | `/api/survey/houses/<id>/family/` | Any Token | — | List all family members of a house |
-| 22 | `GET` | `/api/survey/family/<member_id>/` | Any Token | — | Get single family member detail |
-| 23 | `PATCH` | `/api/survey/family/<member_id>/` | Agent | `application/json` | Update family member |
-| 24 | `DELETE` | `/api/survey/family/<member_id>/` | Any Token | — | Delete family member |
-| 25 | `GET` | `/api/survey/admin/report/` | Admin | — | Full report of all houses, photos & families |
-
----
-
-### 6.1 Admin Authentication
-
-#### 1) Register Admin
-- **URL:** `POST /api/auth/admin/register/`
-- **Headers:** `Content-Type: application/json` (No `Authorization` header)
-- **Request Body:**
+### 3.1 Register Admin
+- **Method:** `POST`
+- **URL:** `<BASE_URL>/api/auth/admin/register/`
+- **Postman Headers:**
+  - `Content-Type`: `application/json` *(No `Authorization` header)*
+- **Postman Body (`raw` → `JSON`):**
 ```json
 {
   "username": "admin2",
@@ -187,9 +110,7 @@ During local HTTP development (non-HTTPS), enable `usesCleartextTraffic` and per
   "last_name": "Admin"
 }
 ```
-*(Required: `username`, `password` [min 6 chars], `confirm_password`. Optional: `email`, `phone`, `first_name`, `last_name`.)*
-
-- **Success Response (`201 Created`):**
+- **Return from API (`201 Created`):**
 ```json
 {
   "message": "Admin registered successfully.",
@@ -203,24 +124,26 @@ During local HTTP development (non-HTTPS), enable `usesCleartextTraffic` and per
     "phone": "9876543210",
     "role": "admin",
     "is_active": true,
-    "created_at": "2026-11-03T10:30:00+05:30"
+    "created_at": "2026-11-17T20:30:00+05:30"
   }
 }
 ```
 
 ---
 
-#### 2) Admin Login
-- **URL:** `POST /api/auth/admin/login/`
-- **Headers:** `Content-Type: application/json` (No `Authorization` header)
-- **Request Body:**
+### 3.2 Admin Login
+- **Method:** `POST`
+- **URL:** `<BASE_URL>/api/auth/admin/login/`
+- **Postman Headers:**
+  - `Content-Type`: `application/json` *(No `Authorization` header)*
+- **Postman Body (`raw` → `JSON`):**
 ```json
 {
   "username": "admin",
   "password": "Admin@1234"
 }
 ```
-- **Success Response (`200 OK`):**
+- **Return from API (`200 OK`):**
 ```json
 {
   "message": "Admin login successful.",
@@ -238,25 +161,16 @@ During local HTTP development (non-HTTPS), enable `usesCleartextTraffic` and per
   }
 }
 ```
-- **Error if Field Agent tries Admin Login (`403 Forbidden`):**
-```json
-{
-  "error": "This account is not an admin account."
-}
-```
 
 ---
 
-### 6.2 Field Agent Authentication
-
-#### 3) Register Field Agent *(Admin Token Required)*
-- **URL:** `POST /api/auth/agent/register/`
-- **Headers:**
-  ```http
-  Authorization: Token <admin_token>
-  Content-Type: application/json
-  ```
-- **Request Body:**
+### 3.3 Register Field Agent *(Admin Only)*
+- **Method:** `POST`
+- **URL:** `<BASE_URL>/api/auth/agent/register/`
+- **Postman Headers:**
+  - `Authorization`: `Token <ADMIN_TOKEN>`
+  - `Content-Type`: `application/json`
+- **Postman Body (`raw` → `JSON`):**
 ```json
 {
   "username": "agent02",
@@ -268,7 +182,7 @@ During local HTTP development (non-HTTPS), enable `usesCleartextTraffic` and per
   "last_name": "Kumar"
 }
 ```
-- **Success Response (`201 Created`):**
+- **Return from API (`201 Created`):**
 ```json
 {
   "message": "Field agent registered successfully.",
@@ -282,24 +196,26 @@ During local HTTP development (non-HTTPS), enable `usesCleartextTraffic` and per
     "phone": "9123456789",
     "role": "field_agent",
     "is_active": true,
-    "created_at": "2026-11-03T11:00:00+05:30"
+    "created_at": "2026-11-17T20:35:00+05:30"
   }
 }
 ```
 
 ---
 
-#### 4) Field Agent Login
-- **URL:** `POST /api/auth/agent/login/`
-- **Headers:** `Content-Type: application/json` (No `Authorization` header)
-- **Request Body:**
+### 3.4 Field Agent Login
+- **Method:** `POST`
+- **URL:** `<BASE_URL>/api/auth/agent/login/`
+- **Postman Headers:**
+  - `Content-Type`: `application/json` *(No `Authorization` header)*
+- **Postman Body (`raw` → `JSON`):**
 ```json
 {
   "username": "agent01",
   "password": "Agent@1234"
 }
 ```
-- **Success Response (`200 OK`):**
+- **Return from API (`200 OK`):**
 ```json
 {
   "message": "Field agent login successful.",
@@ -317,24 +233,16 @@ During local HTTP development (non-HTTPS), enable `usesCleartextTraffic` and per
   }
 }
 ```
-- **Error if Deactivated by Admin (`400 Bad Request`):**
-```json
-{
-  "non_field_errors": [
-    "Your account has been deactivated. Contact admin."
-  ]
-}
-```
 
 ---
 
-### 6.3 Logout & User Profile
-
-#### 5) Logout (Admin or Field Agent)
-- **URL:** `POST /api/auth/logout/`
-- **Headers:** `Authorization: Token <your_token>`
-- **Request Body:** None
-- **Success Response (`200 OK`):**
+### 3.5 Logout
+- **Method:** `POST`
+- **URL:** `<BASE_URL>/api/auth/logout/`
+- **Postman Headers:**
+  - `Authorization`: `Token <YOUR_TOKEN>`
+- **Postman Body:** None
+- **Return from API (`200 OK`):**
 ```json
 {
   "message": "Logged out successfully."
@@ -343,10 +251,21 @@ During local HTTP development (non-HTTPS), enable `usesCleartextTraffic` and per
 
 ---
 
-#### 6) Get My Profile
-- **URL:** `GET /api/auth/profile/`
-- **Headers:** `Authorization: Token <your_token>`
-- **Success Response (`200 OK`):**
+### 3.6 View & Update My Profile
+- **View Profile:** `GET <BASE_URL>/api/auth/profile/`
+- **Update Profile:** `PATCH <BASE_URL>/api/auth/profile/`
+- **Postman Headers:**
+  - `Authorization`: `Token <YOUR_TOKEN>`
+  - `Content-Type`: `application/json` *(for `PATCH`)*
+- **Postman Body for `PATCH` (`raw` → `JSON`):**
+```json
+{
+  "first_name": "Ravi",
+  "last_name": "Kumar",
+  "phone": "9876500001"
+}
+```
+- **Return from API (`200 OK`):**
 ```json
 {
   "id": 2,
@@ -363,32 +282,14 @@ During local HTTP development (non-HTTPS), enable `usesCleartextTraffic` and per
 
 ---
 
-#### 7) Update My Profile
-- **URL:** `PATCH /api/auth/profile/`
-- **Headers:**
-  ```http
-  Authorization: Token <your_token>
-  Content-Type: application/json
-  ```
-- **Request Body (Partial JSON):**
-```json
-{
-  "first_name": "Ravi",
-  "last_name": "Gowda",
-  "phone": "9988776655",
-  "email": "ravi@wardsurvey.com"
-}
-```
-- **Success Response (`200 OK`):** Returns the updated user profile object (same structure as `GET /api/auth/profile/`).
+## 4. Field Agent Management APIs *(Admin Only)*
 
----
-
-### 6.4 Field Agent Management *(Admin Only)*
-
-#### 8) List All Field Agents
-- **URL:** `GET /api/auth/agents/`
-- **Headers:** `Authorization: Token <admin_token>`
-- **Success Response (`200 OK`):**
+### 4.1 List All Field Agents
+- **Method:** `GET`
+- **URL:** `<BASE_URL>/api/auth/agents/`
+- **Postman Headers:**
+  - `Authorization`: `Token <ADMIN_TOKEN>`
+- **Return from API (`200 OK`):**
 ```json
 {
   "count": 1,
@@ -403,7 +304,7 @@ During local HTTP development (non-HTTPS), enable `usesCleartextTraffic` and per
       "role": "field_agent",
       "is_active": true,
       "created_at": "2026-11-03T11:11:00+05:30",
-      "total_houses": 4
+      "total_houses": 2
     }
   ]
 }
@@ -411,10 +312,12 @@ During local HTTP development (non-HTTPS), enable `usesCleartextTraffic` and per
 
 ---
 
-#### 9) Get Single Field Agent Detail
-- **URL:** `GET /api/auth/agents/<id>/` (e.g., `/api/auth/agents/2/`)
-- **Headers:** `Authorization: Token <admin_token>`
-- **Success Response (`200 OK`):**
+### 4.2 Get Single Field Agent Detail
+- **Method:** `GET`
+- **URL:** `<BASE_URL>/api/auth/agents/2/`
+- **Postman Headers:**
+  - `Authorization`: `Token <ADMIN_TOKEN>`
+- **Return from API (`200 OK`):**
 ```json
 {
   "id": 2,
@@ -426,17 +329,19 @@ During local HTTP development (non-HTTPS), enable `usesCleartextTraffic` and per
   "role": "field_agent",
   "is_active": true,
   "created_at": "2026-11-03T11:11:00+05:30",
-  "total_houses": 4
+  "total_houses": 2
 }
 ```
 
 ---
 
-#### 10) Activate / Deactivate Field Agent (Force Logout)
-- **URL:** `PATCH /api/auth/agents/<id>/toggle-active/` (e.g., `/api/auth/agents/2/toggle-active/`)
-- **Headers:** `Authorization: Token <admin_token>`
-- **Request Body:** None (toggles `is_active` between `true` and `false`)
-- **Success Response (`200 OK`):**
+### 4.3 Activate / Deactivate Field Agent (Force Logout)
+- **Method:** `PATCH`
+- **URL:** `<BASE_URL>/api/auth/agents/2/toggle-active/`
+- **Postman Headers:**
+  - `Authorization`: `Token <ADMIN_TOKEN>`
+- **Postman Body:** None
+- **Return from API (`200 OK`):**
 ```json
 {
   "message": "Field agent deactivated successfully.",
@@ -445,128 +350,425 @@ During local HTTP development (non-HTTPS), enable `usesCleartextTraffic` and per
   "username": "agent01"
 }
 ```
-> **Note:** Deactivating an agent **immediately deletes their auth token** on the server. Their very next Android API request will return `401 Unauthorized` (`{"detail": "Invalid token."}`), forcing immediate logout in the app. Calling `toggle-active` again reactivates the account (`"is_active": true`).
+*(Calling it again reactivates the agent and returns `"is_active": true`.)*
 
 ---
 
-#### 11) Delete Field Agent
-- **URL:** `DELETE /api/auth/agents/<id>/` (e.g., `/api/auth/agents/2/`)
-- **Headers:** `Authorization: Token <admin_token>`
-- **Success Response:** `204 No Content` (empty body — check `response.code() == 204` or `response.isSuccessful` in Retrofit).
-> **Warning:** Permanently deletes the agent and cascades to their uploaded surveys. Use `toggle-active` if you want to disable access while keeping their uploaded survey records.
+### 4.4 Delete Field Agent
+- **Method:** `DELETE`
+- **URL:** `<BASE_URL>/api/auth/agents/2/`
+- **Postman Headers:**
+  - `Authorization`: `Token <ADMIN_TOKEN>`
+- **Return from API:** Status `204 No Content` (Empty response body).
 
 ---
 
-### 6.5 Form 1 — Home Survey API
+## 5. 8-Section Haritha Kerala Survey API (Single Submit)
 
-#### 12) Submit Home Form with Multiple Angle Photos *(Field Agent Only)*
-- **URL:** `POST /api/survey/houses/`
-- **Headers:**
-  ```http
-  Authorization: Token <agent_token>
-  Content-Type: multipart/form-data
-  ```
-- **Multipart Form Fields:**
+When the Field Agent completes all 8 tabs (`1/8` → `8/8`) and clicks **Submit Survey**, all 8 sections + multiple family members + images are sent in **one single API call** to:
 
-| Key | Type | Required | Description / Example |
-|-----|------|:--------:|-----------------------|
-| `house_number` | String | ✅ | `"HN-104/A"` |
-| `ward_no` | String | ✅ | `"Ward-05"` |
-| `address` | String | ✅ | `"104, 4th Cross, Gandhi Nagar"` |
-| `landmark` | String | ❌ | `"Near Govt Primary School"` |
-| `owner_name` | String | ✅ | `"Ramesh Gowda"` |
-| `ownership` | Choice | ✅ | `own` \| `rent` \| `lease` \| `others` |
-| `house_type` | Choice | ✅ | `permanent` \| `semi_permanent` \| `temporary` |
-| `roof_type` | Choice | ✅ | `rcc` \| `tiles` \| `asbestos` \| `thatched` \| `others` |
-| `water_source` | Choice | ✅ | `tap` \| `well` \| `borewell` \| `river` \| `others` |
-| `electricity` | Choice | ✅ | `yes` \| `no` \| `solar` |
-| `toilet` | Choice | ✅ | `yes` \| `no` \| `shared` |
-| `ration_card_type` | Choice | ✅ | `apl` \| `bpl` \| `aay` \| `none` |
-| `latitude` | Decimal String | ❌ | `"12.971598"` (up to 6 decimal places) |
-| `longitude` | Decimal String | ❌ | `"77.594566"` (up to 6 decimal places) |
-| `remarks` | String | ❌ | `"Two-storey residential house"` |
-| `photos` | File (repeat key) | ❌ | Multiple image files (`photos`, `photos`, `photos`...) |
-| `captions` | String (repeat key) | ❌ | Matching angle captions (`"Front View"`, `"Back View"`, `"Left Side"`...) |
+- **Method:** `POST`
+- **URL:** `<BASE_URL>/api/survey/houses/` *(also works at `/api/survey/submit/` and `/api/survey/surveys/`)*
+- **Role Required:** **Field Agent Token** (`Authorization: Token <FIELD_AGENT_TOKEN>`)
 
-- **Success Response (`201 Created`):**
+You can test this in Postman using **Method A (Raw JSON)** or **Method B (`form-data` with Image Files)**.
+
+---
+
+### 5.1 Method A — Submit in Postman as Raw JSON (with URL or Base64 Image)
+
+1. Set Method to **`POST`** and URL to **`<BASE_URL>/api/survey/houses/`**.
+2. In **Headers**, set:
+   - `Authorization`: `Token <FIELD_AGENT_TOKEN>`
+   - `Content-Type`: `application/json`
+3. In **Body** → select **`raw`** → **`JSON`** and paste:
+
 ```json
 {
-  "message": "House survey submitted successfully.",
+  "survey": {
+    "language": "en",
+
+    "household_details": {
+      "family_head_name": "Sanoop",
+      "residence_name": "Green Villa",
+      "residence_type": "OWNED",
+      "house_name": "Puthen Veedu",
+      "house_number": "123",
+      "house_number_type": "NEW",
+      "phone_number": "+919876543210",
+      "blood_group": "O+",
+      "age": 25,
+      "gender": "M",
+      "education": "Degree",
+      "occupation": "Software Developer",
+      "willing_to_donate_blood": true,
+      "photo_url": "https://example.com/photo.jpg",
+      "location": {
+        "latitude": 11.123456,
+        "longitude": 76.123456,
+        "address": "Nilambur, Kerala, India"
+      }
+    },
+
+    "family_members": [
+      {
+        "name": "Member Name 1",
+        "age": 48,
+        "gender": "F",
+        "education": "SSLC",
+        "occupation": "Homemaker",
+        "blood_group": "B+",
+        "willing_to_donate_blood": false
+      },
+      {
+        "name": "Member Name 2",
+        "age": 20,
+        "gender": "M",
+        "education": "Degree",
+        "occupation": "Student",
+        "blood_group": "A+",
+        "willing_to_donate_blood": true
+      }
+    ],
+
+    "retired_government_employee": {
+      "has_retired_employee": true,
+      "department": "Education",
+      "sector": "GOVERNMENT",
+      "designation": "Teacher"
+    },
+
+    "agriculture": {
+      "currently_farming": true,
+      "interested_in_farming": true
+    },
+
+    "water_management": {
+      "water_sources": [
+        "WELL",
+        "WATER_AUTHORITY",
+        "NEIGHBOUR_WELL",
+        "OTHER"
+      ],
+      "other_water_source": null,
+      "needs_pipeline_connection": true
+    },
+
+    "waste_management": {
+      "organic_waste_method": "BIOGAS",
+      "other_method": null,
+      "hands_over_non_organic_waste_to_haritha_karma_sena": true
+    },
+
+    "green_energy": {
+      "has_solar": true,
+      "interested_in_installing_solar": true,
+      "has_ev": true,
+      "ev_vehicle_types": [
+        "TWO_WHEELER",
+        "FOUR_WHEELER"
+      ]
+    },
+
+    "health_accessibility": {
+      "has_differently_abled_person": false,
+      "has_bedridden_patient": false,
+      "is_haritha_bhavan": false,
+      "interested_in_haritha_bhavan_scheme": true,
+      "uses_diapers": false
+    },
+
+    "property_and_public_spaces": {
+      "has_vacant_public_land": true,
+      "public_land_location": "Near community hall",
+      "public_land_photo_url": "https://example.com/public-land.jpg",
+
+      "has_vacant_house_or_land_nearby": true,
+      "vacant_property_photo_url": "https://example.com/property.jpg",
+      "vacant_property_location": "Near main road",
+
+      "is_waste_dumped_in_vacant_land": false
+    },
+
+    "domestic_animals": {
+      "has_animals": true,
+      "animals": {
+        "chicken": 10,
+        "cow": 2,
+        "goat": 3,
+        "buffalo": 0
+      }
+    },
+
+    "entrepreneurship": {
+      "has_existing_business": true,
+      "interested_in_starting_home_business": true,
+      "business_details": "Homemade food products"
+    },
+
+    "additional_feedback": {
+      "suggestions": "Need better waste collection facilities in our area."
+    }
+  }
+}
+```
+> **Tip for Base64 Camera Photos in JSON:** If the mobile app passes `"data:image/jpeg;base64,/9j/4AAQ..."` (or raw Base64) in `photo_url`, `public_land_photo_url`, or `vacant_property_photo_url`, Django automatically decodes the image, saves it into `media/house_photos/<id>/`, and returns the generated `http://.../media/house_photos/<id>/...` URL in the response!
+
+---
+
+### 5.2 Method B — Submit in Postman as `form-data` (JSON + Image Files in One Call)
+
+To upload actual image files (`JPG`/`PNG`) along with the 8-section JSON in a **single Postman request**:
+
+1. Set Method to **`POST`** and URL to **`<BASE_URL>/api/survey/houses/`**.
+2. In **Headers**, set **only**:
+   - `Authorization`: `Token <FIELD_AGENT_TOKEN>`
+   *(Do NOT manually set `Content-Type`; Postman sets `multipart/form-data; boundary=...` automatically).*
+3. In **Body** → select **`form-data`** and add these keys:
+
+| Key | Type (Dropdown) | Value |
+|-----|-----------------|-------|
+| `survey` | **Text** | Paste the entire `{"survey": { ... }}` JSON string from Section 5.1 |
+| `house_photo` | **File** | Select an image file from your PC (for `household_details.photo_url`) |
+| `public_land_photo` | **File** | Select an image file from your PC (for `public_land_photo_url`) |
+| `vacant_property_photo` | **File** | Select an image file from your PC (for `vacant_property_photo_url`) |
+
+#### Return from API (`201 Created`)
+
+```json
+{
+  "message": "Household survey submitted successfully.",
+  "id": 1,
   "house": {
     "id": 1,
     "field_agent": 2,
     "field_agent_name": "agent01",
-    "house_number": "HN-104/A",
-    "ward_no": "Ward-05",
-    "address": "104, 4th Cross, Gandhi Nagar",
-    "landmark": "Near Govt Primary School",
-    "owner_name": "Ramesh Gowda",
-    "ownership": "own",
-    "ownership_display": "Own",
-    "house_type": "permanent",
-    "house_type_display": "Permanent",
-    "roof_type": "rcc",
-    "roof_type_display": "RCC",
-    "water_source": "tap",
-    "water_source_display": "Tap Water",
-    "electricity": "yes",
-    "electricity_display": "Yes",
-    "toilet": "yes",
-    "toilet_display": "Yes (Private)",
-    "ration_card_type": "bpl",
-    "ration_card_type_display": "BPL",
-    "latitude": "12.971598",
-    "longitude": "77.594566",
-    "remarks": "Two-storey residential house",
+    "survey": {
+      "language": "en",
+      "household_details": {
+        "family_head_name": "Sanoop",
+        "residence_name": "Green Villa",
+        "residence_type": "OWNED",
+        "house_name": "Puthen Veedu",
+        "house_number": "123",
+        "house_number_type": "NEW",
+        "phone_number": "+919876543210",
+        "blood_group": "O+",
+        "age": 25,
+        "gender": "M",
+        "education": "Degree",
+        "occupation": "Software Developer",
+        "willing_to_donate_blood": true,
+        "photo_url": "http://127.0.0.1:8000/media/house_photos/1/house.jpg",
+        "location": {
+          "latitude": 11.123456,
+          "longitude": 76.123456,
+          "address": "Nilambur, Kerala, India"
+        }
+      },
+      "family_members": [
+        {
+          "id": 1,
+          "name": "Member Name 1",
+          "age": 48,
+          "gender": "F",
+          "education": "SSLC",
+          "occupation": "Homemaker",
+          "blood_group": "B+",
+          "willing_to_donate_blood": false
+        },
+        {
+          "id": 2,
+          "name": "Member Name 2",
+          "age": 20,
+          "gender": "M",
+          "education": "Degree",
+          "occupation": "Student",
+          "blood_group": "A+",
+          "willing_to_donate_blood": true
+        }
+      ],
+      "retired_government_employee": {
+        "has_retired_employee": true,
+        "department": "Education",
+        "sector": "GOVERNMENT",
+        "designation": "Teacher"
+      },
+      "agriculture": {
+        "currently_farming": true,
+        "interested_in_farming": true
+      },
+      "water_management": {
+        "water_sources": [
+          "WELL",
+          "WATER_AUTHORITY",
+          "NEIGHBOUR_WELL",
+          "OTHER"
+        ],
+        "other_water_source": null,
+        "needs_pipeline_connection": true
+      },
+      "waste_management": {
+        "organic_waste_method": "BIOGAS",
+        "other_method": null,
+        "hands_over_non_organic_waste_to_haritha_karma_sena": true
+      },
+      "green_energy": {
+        "has_solar": true,
+        "interested_in_installing_solar": true,
+        "has_ev": true,
+        "ev_vehicle_types": [
+          "TWO_WHEELER",
+          "FOUR_WHEELER"
+        ],
+        "interested_in_ev": false,
+        "other_green_initiatives": null
+      },
+      "health_accessibility": {
+        "has_differently_abled_person": false,
+        "has_bedridden_patient": false,
+        "is_haritha_bhavan": false,
+        "interested_in_haritha_bhavan_scheme": true,
+        "uses_diapers": false
+      },
+      "property_and_public_spaces": {
+        "has_vacant_public_land": true,
+        "public_land_location": "Near community hall",
+        "public_land_photo_url": "http://127.0.0.1:8000/media/house_photos/1/pub.jpg",
+        "has_vacant_house_or_land_nearby": true,
+        "vacant_property_photo_url": "http://127.0.0.1:8000/media/house_photos/1/vac.jpg",
+        "vacant_property_location": "Near main road",
+        "is_waste_dumped_in_vacant_land": false
+      },
+      "domestic_animals": {
+        "has_animals": true,
+        "animals": {
+          "chicken": 10,
+          "cow": 2,
+          "goat": 3,
+          "buffalo": 0
+        }
+      },
+      "entrepreneurship": {
+        "has_existing_business": true,
+        "interested_in_starting_home_business": true,
+        "business_details": "Homemade food products"
+      },
+      "additional_feedback": {
+        "suggestions": "Need better waste collection facilities in our area."
+      }
+    },
     "photos": [
       {
         "id": 1,
-        "photo": "/media/house_photos/1/front_view.jpg",
-        "photo_url": "http://192.168.1.10:8000/media/house_photos/1/front_view.jpg",
-        "caption": "Front View",
-        "uploaded_at": "2026-11-03T11:30:00+05:30"
+        "house": 1,
+        "photo": "/media/house_photos/1/house.jpg",
+        "photo_url": "http://127.0.0.1:8000/media/house_photos/1/house.jpg",
+        "caption": "House Photo",
+        "uploaded_at": "2026-11-17T21:08:14+05:30"
       },
       {
         "id": 2,
-        "photo": "/media/house_photos/1/left_side.jpg",
-        "photo_url": "http://192.168.1.10:8000/media/house_photos/1/left_side.jpg",
-        "caption": "Left Side",
-        "uploaded_at": "2026-11-03T11:30:00+05:30"
+        "house": 1,
+        "photo": "/media/house_photos/1/pub.jpg",
+        "photo_url": "http://127.0.0.1:8000/media/house_photos/1/pub.jpg",
+        "caption": "Public Land Photo",
+        "uploaded_at": "2026-11-17T21:08:14+05:30"
+      },
+      {
+        "id": 3,
+        "house": 1,
+        "photo": "/media/house_photos/1/vac.jpg",
+        "photo_url": "http://127.0.0.1:8000/media/house_photos/1/vac.jpg",
+        "caption": "Vacant Property Photo",
+        "uploaded_at": "2026-11-17T21:08:14+05:30"
       }
     ],
-    "family_members": [],
-    "created_at": "2026-11-03T11:30:00+05:30",
-    "updated_at": "2026-11-03T11:30:00+05:30"
-  }
+    "created_at": "2026-11-17T21:08:14+05:30",
+    "updated_at": "2026-11-17T21:08:14+05:30"
+  },
+  "survey": { "...same full 8-section survey object..." }
 }
 ```
-> **Android Tip:** Read `response.house.id` (e.g. `1`) and pass it to the Family Form screen (`POST /api/survey/houses/1/family/`). Use `photo_url` directly with **Glide** or **Coil** to load images.
 
 ---
 
-#### 13) List Houses (Role-Filtered)
-- **URL:** `GET /api/survey/houses/`
-- **Headers:** `Authorization: Token <token>`
-- **Behavior:**
-  - **Admin Token** → returns **all houses** uploaded by **all field agents**.
-  - **Field Agent Token** → returns **only houses uploaded by that field agent**.
-- **Success Response (`200 OK`):**
+### 5.3 Method C — Upload Photo Standalone (`POST /api/survey/upload-photo/`)
+
+If your mobile app wants to upload a photo immediately when captured and get back a `photo_url`:
+
+- **Method:** `POST`
+- **URL:** `<BASE_URL>/api/survey/upload-photo/`
+- **Postman Headers:**
+  - `Authorization`: `Token <FIELD_AGENT_TOKEN>`
+- **Postman Body (`form-data`):**
+
+| Key | Type | Value |
+|-----|------|-------|
+| `photo` | **File** | Select image file (`JPG`/`PNG`) |
+| `caption` | **Text** | `House Photo` |
+
+- **Return from API (`201 Created`):**
+```json
+{
+  "message": "Photo uploaded successfully.",
+  "id": 4,
+  "photo_url": "http://127.0.0.1:8000/media/house_photos/general/photo.jpg",
+  "caption": "House Photo",
+  "photo": {
+    "id": 4,
+    "house": null,
+    "photo": "/media/house_photos/general/photo.jpg",
+    "photo_url": "http://127.0.0.1:8000/media/house_photos/general/photo.jpg",
+    "caption": "House Photo",
+    "uploaded_at": "2026-11-17T21:10:00+05:30"
+  }
+}
+```
+
+---
+
+## 6. List, View, Update & Delete Survey APIs
+
+### 6.1 List Surveys (Admin = All, Field Agent = Own Only)
+- **Method:** `GET`
+- **URL:** `<BASE_URL>/api/survey/houses/`
+- **Postman Headers:**
+  - `Authorization`: `Token <ADMIN_OR_AGENT_TOKEN>`
+- **Return from API (`200 OK`):**
 ```json
 {
   "count": 1,
   "houses": [
     {
       "id": 1,
-      "house_number": "HN-104/A",
-      "ward_no": "Ward-05",
-      "address": "104, 4th Cross, Gandhi Nagar",
-      "owner_name": "Ramesh Gowda",
-      "ownership": "own",
-      "house_type": "permanent",
+      "house_number": "123",
+      "house_number_type": "NEW",
+      "house_name": "Puthen Veedu",
+      "residence_name": "Green Villa",
+      "residence_type": "OWNED",
+      "family_head_name": "Sanoop",
+      "phone_number": "+919876543210",
+      "address": "Nilambur, Kerala, India",
       "field_agent_name": "agent01",
-      "total_photos": 2,
-      "total_family_members": 3,
-      "created_at": "2026-11-03T11:30:00+05:30"
+      "total_photos": 3,
+      "total_family_members": 2,
+      "survey": {
+        "language": "en",
+        "household_details": { "...": "..." },
+        "family_members": [ "..." ],
+        "retired_government_employee": { "...": "..." },
+        "agriculture": { "...": "..." },
+        "water_management": { "...": "..." },
+        "waste_management": { "...": "..." },
+        "green_energy": { "...": "..." },
+        "health_accessibility": { "...": "..." },
+        "property_and_public_spaces": { "...": "..." },
+        "domestic_animals": { "...": "..." },
+        "entrepreneurship": { "...": "..." },
+        "additional_feedback": { "...": "..." }
+      },
+      "created_at": "2026-11-17T21:08:14+05:30"
     }
   ]
 }
@@ -574,221 +776,82 @@ During local HTTP development (non-HTTPS), enable `usesCleartextTraffic` and per
 
 ---
 
-#### 14) Get Single House Detail (with Nested Photos & Family Members)
-- **URL:** `GET /api/survey/houses/<id>/` (e.g., `/api/survey/houses/1/`)
-- **Headers:** `Authorization: Token <token>`
-- **Success Response (`200 OK`):**
-```json
-{
-  "id": 1,
-  "field_agent": 2,
-  "field_agent_name": "agent01",
-  "house_number": "HN-104/A",
-  "ward_no": "Ward-05",
-  "address": "104, 4th Cross, Gandhi Nagar",
-  "landmark": "Near Govt Primary School",
-  "owner_name": "Ramesh Gowda",
-  "ownership": "own",
-  "ownership_display": "Own",
-  "house_type": "permanent",
-  "house_type_display": "Permanent",
-  "roof_type": "rcc",
-  "roof_type_display": "RCC",
-  "water_source": "tap",
-  "water_source_display": "Tap Water",
-  "electricity": "yes",
-  "electricity_display": "Yes",
-  "toilet": "yes",
-  "toilet_display": "Yes (Private)",
-  "ration_card_type": "bpl",
-  "ration_card_type_display": "BPL",
-  "latitude": "12.971598",
-  "longitude": "77.594566",
-  "remarks": "Two-storey residential house",
-  "photos": [
-    {
-      "id": 1,
-      "photo": "/media/house_photos/1/front_view.jpg",
-      "photo_url": "http://192.168.1.10:8000/media/house_photos/1/front_view.jpg",
-      "caption": "Front View",
-      "uploaded_at": "2026-11-03T11:30:00+05:30"
-    }
-  ],
-  "family_members": [
-    {
-      "id": 1,
-      "house": 1,
-      "name": "Ramesh Gowda",
-      "relationship": "head",
-      "relationship_display": "Head of Family",
-      "gender": "male",
-      "gender_display": "Male",
-      "dob": "1982-05-14",
-      "age": 44,
-      "education": "PUC / 12th",
-      "occupation": "Agriculture",
-      "phone": "9876543210"
-    }
-  ],
-  "created_at": "2026-11-03T11:30:00+05:30",
-  "updated_at": "2026-11-03T11:30:00+05:30"
-}
-```
+### 6.2 Get Single Survey Detail
+- **Method:** `GET`
+- **URL:** `<BASE_URL>/api/survey/houses/1/`
+- **Postman Headers:**
+  - `Authorization`: `Token <ADMIN_OR_AGENT_TOKEN>`
+- **Return from API (`200 OK`):**
+Returns the full house object (`id`, `field_agent`, `field_agent_name`, `survey`, `photos`, `created_at`, `updated_at`).
 
 ---
 
-#### 15) Update House Survey *(Field Agent — Own House Only)*
-- **URL:** `PATCH /api/survey/houses/<id>/`
-- **Headers:**
-  ```http
-  Authorization: Token <agent_token>
-  Content-Type: application/json
-  ```
-- **Request Body (Send only the fields to update):**
+### 6.3 Update Survey *(Field Agent — Own Survey Only)*
+- **Method:** `PATCH`
+- **URL:** `<BASE_URL>/api/survey/houses/1/`
+- **Postman Headers:**
+  - `Authorization`: `Token <FIELD_AGENT_TOKEN>`
+  - `Content-Type`: `application/json`
+- **Postman Body (`raw` → `JSON` — send only the sections you want to update):**
 ```json
 {
-  "remarks": "Updated remarks after second visit",
-  "electricity": "solar"
-}
-```
-- **Success Response (`200 OK`):**
-```json
-{
-  "message": "House survey updated successfully.",
-  "house": {
-    "id": 1,
-    "house_number": "HN-104/A",
-    "...": "full house object (same as GET /api/survey/houses/<id>/)"
+  "survey": {
+    "agriculture": {
+      "currently_farming": false,
+      "interested_in_farming": true
+    },
+    "additional_feedback": {
+      "suggestions": "Updated suggestion from Postman."
+    }
   }
 }
 ```
-
----
-
-#### 16) Delete House Survey *(Admin Only)*
-- **URL:** `DELETE /api/survey/houses/<id>/`
-- **Headers:** `Authorization: Token <admin_token>`
-- **Success Response:** `204 No Content`
-
----
-
-### 6.6 House Multiple-Angle Photos API
-
-All photos are stored inside the project under `media/house_photos/<house_id>/<filename>`.
-
-#### 17) Upload Additional Angle Photos *(Field Agent — Own House Only)*
-- **URL:** `POST /api/survey/houses/<id>/photos/` (e.g., `/api/survey/houses/1/photos/`)
-- **Headers:**
-  ```http
-  Authorization: Token <agent_token>
-  Content-Type: multipart/form-data
-  ```
-- **Multipart Form Fields:**
-  - `photos`: One or more image files (`JPG`, `PNG`, `WEBP`)
-  - `captions`: Optional repeated string parts matching each photo (`"Back View"`, `"Roof View"`)
-- **Success Response (`201 Created`):**
+- **Return from API (`200 OK`):**
 ```json
 {
-  "message": "2 photo(s) uploaded successfully.",
-  "photos": [
-    {
-      "id": 3,
-      "photo": "/media/house_photos/1/back_view.jpg",
-      "photo_url": "http://192.168.1.10:8000/media/house_photos/1/back_view.jpg",
-      "caption": "Back View",
-      "uploaded_at": "2026-11-03T11:35:00+05:30"
-    },
-    {
-      "id": 4,
-      "photo": "/media/house_photos/1/roof_view.jpg",
-      "photo_url": "http://192.168.1.10:8000/media/house_photos/1/roof_view.jpg",
-      "caption": "Roof View",
-      "uploaded_at": "2026-11-03T11:35:00+05:30"
-    }
-  ]
+  "message": "Household survey updated successfully.",
+  "id": 1,
+  "house": { "...updated full house object..." },
+  "survey": { "...updated full survey object..." }
 }
 ```
 
 ---
 
-#### 18) List Photos of a House
-- **URL:** `GET /api/survey/houses/<id>/photos/`
-- **Headers:** `Authorization: Token <token>`
-- **Success Response (`200 OK`):**
-```json
-{
-  "count": 4,
-  "photos": [
-    {
-      "id": 1,
-      "photo": "/media/house_photos/1/front_view.jpg",
-      "photo_url": "http://192.168.1.10:8000/media/house_photos/1/front_view.jpg",
-      "caption": "Front View",
-      "uploaded_at": "2026-11-03T11:30:00+05:30"
-    }
-  ]
-}
-```
+### 6.4 Delete Survey *(Admin Only)*
+- **Method:** `DELETE`
+- **URL:** `<BASE_URL>/api/survey/houses/1/`
+- **Postman Headers:**
+  - `Authorization`: `Token <ADMIN_TOKEN>`
+- **Return from API:** Status `204 No Content`.
 
 ---
 
-#### 19) Delete Single Photo
-- **URL:** `DELETE /api/survey/photos/<photo_id>/` (e.g., `/api/survey/photos/3/`)
-- **Headers:** `Authorization: Token <token>` (Admin can delete any; Field Agent can delete own house photos)
-- **Success Response:** `204 No Content` (Deletes both database record and image file on disk).
+## 7. Family Members APIs
 
----
+*(Note: Family members are already created automatically when you submit `family_members` inside `POST /api/survey/houses/`. You can also manage them individually with these endpoints.)*
 
-### 6.7 Form 2 — Family Members API
-
-#### 20) Submit Family Form *(Field Agent — Own House Only)*
-- **URL:** `POST /api/survey/houses/<house_id>/family/` (e.g., `/api/survey/houses/1/family/`)
-- **Headers:**
-  ```http
-  Authorization: Token <agent_token>
-  Content-Type: application/json
-  ```
-
-| Field | Type | Required | Format / Choices |
-|-------|------|:--------:|------------------|
-| `name` | String | ✅ | `"Ramesh Gowda"` |
-| `relationship` | Choice | ✅ | `head` \| `spouse` \| `son` \| `daughter` \| `father` \| `mother` \| `others` |
-| `gender` | Choice | ✅ | `male` \| `female` \| `other` |
-| `dob` | Date String | ✅ | `"YYYY-MM-DD"` (e.g. `"1982-05-14"`) |
-| `age` | Integer | ✅ | `44` |
-| `education` | String | ❌ | `"PUC / 12th"` |
-| `occupation` | String | ❌ | `"Agriculture"` |
-| `phone` | String | ❌ | `"9876543210"` |
-
-##### Mode A — Add Multiple Family Members at Once (Recommended for Android Family Form)
-Send a **JSON Array** `[...]` — even for 1 member (`[member1]`), sending an array guarantees `family_members` in the response is **always a JSON Array**!
-
-- **Request Body (JSON Array):**
+### 7.1 Add Family Member(s) to an Existing House
+- **Method:** `POST`
+- **URL:** `<BASE_URL>/api/survey/houses/1/family/`
+- **Postman Headers:**
+  - `Authorization`: `Token <FIELD_AGENT_TOKEN>`
+  - `Content-Type`: `application/json`
+- **Postman Body (`raw` → `JSON` — single object or array `[...]`):**
 ```json
 [
   {
-    "name": "Ramesh Gowda",
-    "relationship": "head",
-    "gender": "male",
-    "dob": "1982-05-14",
-    "age": 44,
-    "education": "PUC / 12th",
-    "occupation": "Agriculture",
-    "phone": "9876543210"
-  },
-  {
-    "name": "Savitha Gowda",
-    "relationship": "spouse",
-    "gender": "female",
-    "dob": "1986-08-22",
-    "age": 40,
-    "education": "B.A.",
-    "occupation": "Tailor",
-    "phone": "9876543211"
+    "name": "Member Name 3",
+    "age": 16,
+    "gender": "F",
+    "education": "Plus Two",
+    "occupation": "Student",
+    "blood_group": "O+",
+    "willing_to_donate_blood": false
   }
 ]
 ```
-- **Success Response (`201 Created` — `family_members` is an Array):**
+- **Return from API (`201 Created`):**
 ```json
 {
   "message": "Family member(s) added successfully.",
@@ -796,173 +859,74 @@ Send a **JSON Array** `[...]` — even for 1 member (`[member1]`), sending an ar
     {
       "id": 1,
       "house": 1,
-      "name": "Ramesh Gowda",
-      "relationship": "head",
-      "relationship_display": "Head of Family",
-      "gender": "male",
-      "gender_display": "Male",
-      "dob": "1982-05-14",
-      "age": 44,
-      "education": "PUC / 12th",
-      "occupation": "Agriculture",
-      "phone": "9876543210"
+      "name": "Member Name 1",
+      "age": 48,
+      "gender": "F",
+      "education": "SSLC",
+      "occupation": "Homemaker",
+      "blood_group": "B+",
+      "willing_to_donate_blood": false
     },
     {
       "id": 2,
       "house": 1,
-      "name": "Savitha Gowda",
-      "relationship": "spouse",
-      "relationship_display": "Spouse",
-      "gender": "female",
-      "gender_display": "Female",
-      "dob": "1986-08-22",
-      "age": 40,
-      "education": "B.A.",
-      "occupation": "Tailor",
-      "phone": "9876543211"
-    }
-  ]
-}
-```
-
-##### Mode B — Add Single Family Member Object
-- **Request Body (Single JSON Object):**
-```json
-{
-  "name": "Kiran Gowda",
-  "relationship": "son",
-  "gender": "male",
-  "dob": "2008-11-10",
-  "age": 17,
-  "education": "11th Std",
-  "occupation": "Student",
-  "phone": ""
-}
-```
-- **Success Response (`201 Created` — `family_members` is a Single Object):**
-```json
-{
-  "message": "Family member(s) added successfully.",
-  "family_members": {
-    "id": 3,
-    "house": 1,
-    "name": "Kiran Gowda",
-    "relationship": "son",
-    "relationship_display": "Son",
-    "gender": "male",
-    "gender_display": "Male",
-    "dob": "2008-11-10",
-    "age": 17,
-    "education": "11th Std",
-    "occupation": "Student",
-    "phone": ""
-  }
-}
-```
-
----
-
-#### 21) List Family Members of a House
-- **URL:** `GET /api/survey/houses/<house_id>/family/`
-- **Headers:** `Authorization: Token <token>`
-- **Success Response (`200 OK`):**
-```json
-{
-  "count": 3,
-  "family_members": [
+      "name": "Member Name 2",
+      "age": 20,
+      "gender": "M",
+      "education": "Degree",
+      "occupation": "Student",
+      "blood_group": "A+",
+      "willing_to_donate_blood": true
+    },
     {
-      "id": 1,
+      "id": 3,
       "house": 1,
-      "name": "Ramesh Gowda",
-      "relationship": "head",
-      "relationship_display": "Head of Family",
-      "gender": "male",
-      "gender_display": "Male",
-      "dob": "1982-05-14",
-      "age": 44,
-      "education": "PUC / 12th",
-      "occupation": "Agriculture",
-      "phone": "9876543210"
+      "name": "Member Name 3",
+      "age": 16,
+      "gender": "F",
+      "education": "Plus Two",
+      "occupation": "Student",
+      "blood_group": "O+",
+      "willing_to_donate_blood": false
     }
   ]
 }
 ```
 
----
+### 7.2 List Family Members of a House
+- **Method:** `GET`
+- **URL:** `<BASE_URL>/api/survey/houses/1/family/`
+- **Headers:** `Authorization: Token <TOKEN>`
+- **Return (`200 OK`):** `{"count": 3, "family_members": [ ... ]}`
 
-#### 22) Get Single Family Member Detail
-- **URL:** `GET /api/survey/family/<member_id>/` (e.g., `/api/survey/family/1/`)
-- **Headers:** `Authorization: Token <token>`
-- **Success Response (`200 OK`):**
-```json
-{
-  "id": 1,
-  "house": 1,
-  "name": "Ramesh Gowda",
-  "relationship": "head",
-  "relationship_display": "Head of Family",
-  "gender": "male",
-  "gender_display": "Male",
-  "dob": "1982-05-14",
-  "age": 44,
-  "education": "PUC / 12th",
-  "occupation": "Agriculture",
-  "phone": "9876543210"
-}
-```
-
----
-
-#### 23) Update Family Member *(Field Agent — Own House Only)*
-- **URL:** `PATCH /api/survey/family/<member_id>/` (e.g., `/api/survey/family/1/`)
-- **Headers:**
-  ```http
-  Authorization: Token <agent_token>
-  Content-Type: application/json
-  ```
-- **Request Body (Partial JSON):**
-```json
-{
-  "occupation": "Dairy Farming",
-  "phone": "9876500099"
-}
-```
-- **Success Response (`200 OK`):**
-```json
-{
-  "message": "Family member updated.",
-  "family_member": {
-    "id": 1,
-    "house": 1,
-    "name": "Ramesh Gowda",
-    "relationship": "head",
-    "relationship_display": "Head of Family",
-    "gender": "male",
-    "gender_display": "Male",
-    "dob": "1982-05-14",
-    "age": 44,
-    "education": "PUC / 12th",
-    "occupation": "Dairy Farming",
-    "phone": "9876500099"
+### 7.3 Update / Delete a Single Family Member
+- **Get Detail:** `GET <BASE_URL>/api/survey/family/1/`
+- **Update (`PATCH`):** `PATCH <BASE_URL>/api/survey/family/1/`
+  ```json
+  {
+    "occupation": "Teacher",
+    "willing_to_donate_blood": true
   }
-}
-```
+  ```
+- **Delete (`DELETE`):** `DELETE <BASE_URL>/api/survey/family/1/` → `204 No Content`
 
 ---
 
-#### 24) Delete Family Member
-- **URL:** `DELETE /api/survey/family/<member_id>/`
-- **Headers:** `Authorization: Token <token>` (Admin = any; Field Agent = own house only)
-- **Success Response:** `204 No Content`
+## 8. House Photos APIs
+
+- **Upload Additional Photos (`POST`):** `<BASE_URL>/api/survey/houses/1/photos/` (`Body` → `form-data` → key `photos` [File], key `captions` [Text])
+- **List Photos of a House (`GET`):** `<BASE_URL>/api/survey/houses/1/photos/`
+- **Delete Photo (`DELETE`):** `<BASE_URL>/api/survey/photos/1/` → `204 No Content`
 
 ---
 
-### 6.8 Admin Full Survey Report API
+## 9. Admin Full Report API
 
-#### 25) Full Admin Report (All Houses + Photos + Family Members)
-- **URL:** `GET /api/survey/admin/report/`
-- **Headers:** `Authorization: Token <admin_token>`
-- **Success Response (`200 OK`):**
+- **Method:** `GET`
+- **URL:** `<BASE_URL>/api/survey/admin/report/`
+- **Postman Headers:**
+  - `Authorization`: `Token <ADMIN_TOKEN>`
+- **Return from API (`200 OK`):**
 ```json
 {
   "total_houses": 1,
@@ -971,55 +935,10 @@ Send a **JSON Array** `[...]` — even for 1 member (`[member1]`), sending an ar
       "id": 1,
       "field_agent": 2,
       "field_agent_name": "agent01",
-      "house_number": "HN-104/A",
-      "ward_no": "Ward-05",
-      "address": "104, 4th Cross, Gandhi Nagar",
-      "landmark": "Near Govt Primary School",
-      "owner_name": "Ramesh Gowda",
-      "ownership": "own",
-      "ownership_display": "Own",
-      "house_type": "permanent",
-      "house_type_display": "Permanent",
-      "roof_type": "rcc",
-      "roof_type_display": "RCC",
-      "water_source": "tap",
-      "water_source_display": "Tap Water",
-      "electricity": "yes",
-      "electricity_display": "Yes",
-      "toilet": "yes",
-      "toilet_display": "Yes (Private)",
-      "ration_card_type": "bpl",
-      "ration_card_type_display": "BPL",
-      "latitude": "12.971598",
-      "longitude": "77.594566",
-      "remarks": "Two-storey residential house",
-      "photos": [
-        {
-          "id": 1,
-          "photo": "/media/house_photos/1/front_view.jpg",
-          "photo_url": "http://192.168.1.10:8000/media/house_photos/1/front_view.jpg",
-          "caption": "Front View",
-          "uploaded_at": "2026-11-03T11:30:00+05:30"
-        }
-      ],
-      "family_members": [
-        {
-          "id": 1,
-          "house": 1,
-          "name": "Ramesh Gowda",
-          "relationship": "head",
-          "relationship_display": "Head of Family",
-          "gender": "male",
-          "gender_display": "Male",
-          "dob": "1982-05-14",
-          "age": 44,
-          "education": "PUC / 12th",
-          "occupation": "Agriculture",
-          "phone": "9876543210"
-        }
-      ],
-      "created_at": "2026-11-03T11:30:00+05:30",
-      "updated_at": "2026-11-03T11:30:00+05:30"
+      "survey": { "...all 8 sections + family_members..." },
+      "photos": [ "...all uploaded photo objects with photo_url..." ],
+      "created_at": "2026-11-17T21:08:14+05:30",
+      "updated_at": "2026-11-17T21:08:14+05:30"
     }
   ]
 }
@@ -1027,196 +946,14 @@ Send a **JSON Array** `[...]` — even for 1 member (`[member1]`), sending an ar
 
 ---
 
-## 7. Dropdown / Choice Field Values
+## 10. Common Error Responses
 
-Send the **exact lowercase `API Value`** when submitting forms; display the `Display Label` in Android Spinners / Dropdowns.
-
-### Home Form Choices
-
-| Field | API Value | Display Label |
-|-------|-----------|---------------|
-| `ownership` | `own`, `rent`, `lease`, `others` | Own, Rent, Lease, Others |
-| `house_type` | `permanent`, `semi_permanent`, `temporary` | Permanent, Semi-Permanent, Temporary |
-| `roof_type` | `rcc`, `tiles`, `asbestos`, `thatched`, `others` | RCC, Tiles, Asbestos, Thatched, Others |
-| `water_source` | `tap`, `well`, `borewell`, `river`, `others` | Tap Water, Well, Borewell, River, Others |
-| `electricity` | `yes`, `no`, `solar` | Yes, No, Solar |
-| `toilet` | `yes`, `no`, `shared` | Yes (Private), No, Shared |
-| `ration_card_type` | `apl`, `bpl`, `aay`, `none` | APL, BPL, AAY (Antyodaya), None |
-
-### Family Form Choices
-
-| Field | API Value | Display Label |
-|-------|-----------|---------------|
-| `relationship` | `head`, `spouse`, `son`, `daughter`, `father`, `mother`, `others` | Head of Family, Spouse, Son, Daughter, Father, Mother, Others |
-| `gender` | `male`, `female`, `other` | Male, Female, Other |
-
----
-
-## 8. Error Response Formats
-
-| HTTP Status | Scenario | Example Response Body | Android Handling |
-|-------------|----------|-----------------------|------------------|
-| `400 Bad Request` | Invalid login / deactivated user | `{"non_field_errors": ["Invalid username or password."]}` or `{"non_field_errors": ["Your account has been deactivated. Contact admin."]}` | Show message toast/error |
-| `400 Bad Request` | Missing/invalid form field | `{"house_number": ["This field is required."], "ownership": ["\"xyz\" is not a valid choice."]}` | Highlight invalid input fields |
-| `401 Unauthorized` | Missing, logged-out, or deactivated token | `{"detail": "Authentication credentials were not provided."}` or `{"detail": "Invalid token."}` | Clear saved token & navigate to Login |
-| `403 Forbidden` | Wrong role | `{"error": "Only field agents can submit house surveys."}` or `{"detail": "Access restricted to admin users only."}` | Restrict UI by `user.role` |
-| `404 Not Found` | Invalid ID or another agent's house | `{"error": "House survey not found."}` | Refresh list |
-
----
-
-## 9. Android Retrofit + OkHttp Code Examples (Kotlin)
-
-### 1) Auth Interceptor (Skips public login/register routes automatically)
-```kotlin
-class AuthInterceptor(private val tokenProvider: () -> String?) : Interceptor {
-    override fun intercept(chain: Interceptor.Chain): Response {
-        val original = chain.request()
-        val path = original.url.encodedPath
-        val isPublicAuth = path.endsWith("/admin/login/") ||
-                           path.endsWith("/admin/register/") ||
-                           path.endsWith("/agent/login/")
-
-        val token = tokenProvider()
-        val request = if (!isPublicAuth && !token.isNullOrBlank()) {
-            original.newBuilder()
-                .header("Authorization", "Token $token")
-                .build()
-        } else {
-            original
-        }
-        return chain.proceed(request)
-    }
-}
-```
-
-### 2) Retrofit API Service Interface
-```kotlin
-interface WardSurveyApi {
-
-    // ── Auth ──
-    @POST("api/auth/admin/login/")
-    suspend fun adminLogin(@Body body: LoginRequest): AuthResponse
-
-    @POST("api/auth/agent/login/")
-    suspend fun agentLogin(@Body body: LoginRequest): AuthResponse
-
-    @POST("api/auth/agent/register/")
-    suspend fun registerAgent(@Body body: RegisterUserRequest): AuthResponse
-
-    @POST("api/auth/logout/")
-    suspend fun logout(): MessageResponse
-
-    // ── Admin: Manage Field Agents ──
-    @GET("api/auth/agents/")
-    suspend fun listAgents(): AgentListResponse
-
-    @PATCH("api/auth/agents/{id}/toggle-active/")
-    suspend fun toggleAgentActive(@Path("id") agentId: Int): ToggleAgentResponse
-
-    @DELETE("api/auth/agents/{id}/")
-    suspend fun deleteAgent(@Path("id") agentId: Int): retrofit2.Response<Unit>
-
-    // ── Form 1: Home Survey (Multipart with Multi-Angle Photos) ──
-    @Multipart
-    @POST("api/survey/houses/")
-    suspend fun submitHomeForm(
-        @PartMap fields: Map<String, @JvmSuppressWildcards RequestBody>,
-        @Part photos: List<MultipartBody.Part>,
-        @Part captions: List<MultipartBody.Part>
-    ): HouseSubmitResponse
-
-    @GET("api/survey/houses/")
-    suspend fun listHouses(): HouseListResponse
-
-    @GET("api/survey/houses/{id}/")
-    suspend fun getHouseDetail(@Path("id") houseId: Int): HouseDetail
-
-    @DELETE("api/survey/houses/{id}/")
-    suspend fun deleteHouse(@Path("id") houseId: Int): retrofit2.Response<Unit>
-
-    // ── Form 2: Family Members (Send List<FamilyMemberRequest> for consistent array response) ──
-    @POST("api/survey/houses/{id}/family/")
-    suspend fun submitFamilyForm(
-        @Path("id") houseId: Int,
-        @Body members: List<FamilyMemberRequest>
-    ): FamilyBulkSubmitResponse
-
-    @GET("api/survey/houses/{id}/family/")
-    suspend fun listFamilyMembers(@Path("id") houseId: Int): FamilyListResponse
-
-    // ── Admin Full Report ──
-    @GET("api/survey/admin/report/")
-    suspend fun getAdminReport(): AdminReportResponse
-}
-```
-
-### 3) Building Multipart Request for Form 1 (Home Form + Multi-Angle Photos)
-```kotlin
-fun String.toTextBody(): RequestBody =
-    this.toRequestBody("text/plain".toMediaTypeOrNull())
-
-suspend fun uploadHouseSurvey(api: WardSurveyApi, imageFiles: List<Pair<File, String>>) {
-    val fields = mutableMapOf(
-        "house_number"     to "HN-104/A".toTextBody(),
-        "ward_no"          to "Ward-05".toTextBody(),
-        "address"          to "104, 4th Cross, Gandhi Nagar".toTextBody(),
-        "landmark"         to "Near Govt Primary School".toTextBody(),
-        "owner_name"       to "Ramesh Gowda".toTextBody(),
-        "ownership"        to "own".toTextBody(),
-        "house_type"       to "permanent".toTextBody(),
-        "roof_type"        to "rcc".toTextBody(),
-        "water_source"     to "tap".toTextBody(),
-        "electricity"      to "yes".toTextBody(),
-        "toilet"           to "yes".toTextBody(),
-        "ration_card_type" to "bpl".toTextBody(),
-        "latitude"         to "12.971598".toTextBody(),
-        "longitude"        to "77.594566".toTextBody(),
-        "remarks"          to "Good condition".toTextBody()
-    )
-
-    val photoParts = imageFiles.map { (file, _) ->
-        val reqFile = file.asRequestBody("image/*".toMediaTypeOrNull())
-        MultipartBody.Part.createFormData("photos", file.name, reqFile)
-    }
-
-    val captionParts = imageFiles.map { (_, angleCaption) ->
-        MultipartBody.Part.createFormData("captions", angleCaption)
-    }
-
-    val res = api.submitHomeForm(fields, photoParts, captionParts)
-    val createdHouseId = res.house.id // Pass this ID to Family Form!
-}
-```
-
----
-
-## 10. Project Structure
-
-```text
-ward_house_servey/
-├── manage.py
-├── requirements.txt
-├── db.sqlite3                          # SQLite database
-├── README.md                           # Full API & Android Integration Guide
-├── templates/
-│   └── dashboard/
-│       └── index.html                  # Built-in Web API Testing UI (/ & /dashboard/)
-├── media/
-│   └── house_photos/
-│       └── <house_id>/                 # Multi-angle house images stored per house
-├── ward_house_survey/
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
-├── accounts/                           # Admin & Field Agent Auth + Agent Management
-│   ├── models.py
-│   ├── permissions.py
-│   ├── serializers.py
-│   ├── urls.py
-│   └── views.py
-└── survey/                             # Home Form, Multi-Angle Photos & Family Form APIs
-    ├── models.py
-    ├── serializers.py
-    ├── urls.py
-    └── views.py
-```
+| Status Code | Example Return from API | Cause & Fix |
+|-------------|-------------------------|-------------|
+| `400 Bad Request` | `{"non_field_errors": ["Invalid username or password."]}` | Check username/password |
+| `400 Bad Request` | `{"non_field_errors": ["Your account has been deactivated. Contact admin."]}` | Admin deactivated this field agent |
+| `400 Bad Request` | `{"household_details": "This section is required inside 'survey'."}` | Missing `household_details` in JSON |
+| `401 Unauthorized` | `{"detail": "Authentication credentials were not provided."}` | Add `Authorization: Token <token>` in Postman Headers |
+| `401 Unauthorized` | `{"detail": "Invalid token."}` | Token was logged out or agent was deactivated; log in again |
+| `403 Forbidden` | `{"error": "Only field agents can submit house surveys."}` | You used an Admin token instead of a Field Agent token |
+| `404 Not Found` | `{"error": "House survey not found."}` | Wrong House ID or belongs to a different Field Agent |

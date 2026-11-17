@@ -16,11 +16,17 @@ class FamilyMemberInline(admin.TabularInline):
 @admin.register(HouseSurvey)
 class HouseSurveyAdmin(admin.ModelAdmin):
     list_display = [
-        'house_number', 'ward_no', 'owner_name', 'ownership',
-        'house_type', 'field_agent', 'created_at'
+        'id', 'house_number', 'house_name', 'family_head_name',
+        'residence_type', 'phone_number', 'field_agent', 'created_at',
     ]
-    list_filter = ['ward_no', 'ownership', 'house_type', 'roof_type', 'ration_card_type']
-    search_fields = ['house_number', 'owner_name', 'address', 'landmark']
+    list_filter = [
+        'residence_type', 'house_number_type', 'currently_farming',
+        'has_solar', 'has_ev', 'is_haritha_bhavan',
+    ]
+    search_fields = [
+        'house_number', 'house_name', 'residence_name',
+        'family_head_name', 'phone_number', 'address',
+    ]
     readonly_fields = ['created_at', 'updated_at']
     inlines = [HousePhotoInline, FamilyMemberInline]
     ordering = ['-created_at']
@@ -28,12 +34,15 @@ class HouseSurveyAdmin(admin.ModelAdmin):
 
 @admin.register(HousePhoto)
 class HousePhotoAdmin(admin.ModelAdmin):
-    list_display = ['house', 'caption', 'uploaded_at']
+    list_display = ['id', 'house', 'caption', 'uploaded_at']
     list_filter = ['uploaded_at']
 
 
 @admin.register(FamilyMember)
 class FamilyMemberAdmin(admin.ModelAdmin):
-    list_display = ['name', 'relationship', 'gender', 'age', 'occupation', 'house']
-    list_filter = ['relationship', 'gender', 'education']
-    search_fields = ['name', 'phone']
+    list_display = [
+        'id', 'name', 'age', 'gender', 'blood_group',
+        'willing_to_donate_blood', 'education', 'occupation', 'house',
+    ]
+    list_filter = ['gender', 'blood_group', 'willing_to_donate_blood']
+    search_fields = ['name', 'education', 'occupation']
